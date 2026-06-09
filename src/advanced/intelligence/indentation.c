@@ -48,7 +48,7 @@ void ilf_indentSelectedLines(FileContainer* fc, History** history_frame, Payload
 
   for (int r = start_row; r <= end_row; r++) {
     Cursor it = tryToReachAbsPosition(original_cursor, r, 0);
-    insertCharArrayAtCursorWithState(history_frame, it, indent_str, *payload_state_change, tab);
+    insertCharArrayAtCursorWithState(history_frame, it, indent_str, payload_state_change, tab);
 
     // Adjust column positions
     if (r == cursor_row) {
@@ -113,7 +113,7 @@ void ilf_deindentSelectedLines(FileContainer* fc, History** history_frame, Paylo
     if (to_delete > 0) {
       Cursor delete_start = tryToReachAbsPosition(it, r, 0);
       Cursor delete_end = tryToReachAbsPosition(it, r, to_delete);
-      deleteSelectionWithState(history_frame, &delete_start, &delete_end, *payload_state_change);
+      deleteSelectionWithState(history_frame, &delete_start, &delete_end, payload_state_change);
 
       // Adjust column positions
       if (r == cursor_row) {

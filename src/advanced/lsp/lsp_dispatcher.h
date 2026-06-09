@@ -11,7 +11,7 @@ typedef struct ModuleContext {
   FilesState files_state;
   ViewPort view_port;
   Cursor* cursor;
-  PayloadStateChange payload_state_change;
+  PayloadStateChange *payload_state_change;
 } ModuleContext;
 
 

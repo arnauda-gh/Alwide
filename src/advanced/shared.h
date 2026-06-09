@@ -11,6 +11,6 @@ typedef struct {
 
 PayloadStateChange getPayloadStateChange(TS_Data* highlight_datas, LSP_Data* lsp_data);
 
-void globalOnStageChange(Action action, Cursor* cursor, void* payload_p);
+void globalOnStateChange(Action action, Cursor* cursor, void* payload_p);
 
 #endif // WISHWIM_SHARED_H

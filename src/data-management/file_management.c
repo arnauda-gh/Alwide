@@ -401,11 +401,11 @@ Cursor insertCharArrayAtCursor(Cursor cursor, char* chs, LF_Tabulation* tab) {
 }
 
 Cursor insertCharArrayAtCursorWithState(History** history_p, Cursor cursor, char* chs,
-                                        PayloadStateChange payload_state_change, LF_Tabulation* tab) {
+                                        PayloadStateChange* payload_state_change, LF_Tabulation* tab) {
   Cursor tmp = cursor;
   cursor = insertCharArrayAtCursor(cursor, chs, tab);
-  saveAction(history_p, createInsertAction(tmp, cursor_to_desc(cursor)), globalOnStageChange, &cursor,
-             &payload_state_change);
+  saveAction(history_p, createInsertAction(tmp, cursor_to_desc(cursor)), globalOnStateChange, &cursor,
+             payload_state_change);
 
   return cursor;
 }
@@ -557,9 +557,9 @@ void deleteSelection(Cursor* cursor, Cursor* select_cursor) {
 }
 
 void deleteSelectionWithState(History** history_p, Cursor* cursor, Cursor* select_cursor,
-                              PayloadStateChange payload_state_change) {
-  saveAction(history_p, createDeleteAction(*cursor, cursor_to_desc(*select_cursor)), globalOnStageChange, cursor,
-             (void*)&payload_state_change);
+                              PayloadStateChange* payload_state_change) {
+  saveAction(history_p, createDeleteAction(*cursor, cursor_to_desc(*select_cursor)), globalOnStateChange, cursor,
+             (void*)payload_state_change);
   deleteSelection(cursor, select_cursor);
 }
 
@@ -760,15 +760,13 @@ bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
 
     case K_SPECIAL(K_MOD_CTRL, 'z'):
       tb->select_cursor = cursor_disable(tb->select_cursor);
-      tb->cursor =
-        undo(&tb->history_frame, tb->cursor, globalOnStageChange, (void*)state_change, &tb->feature->tabulation);
+      tb->cursor = undo(&tb->history_frame, tb->cursor, NULL, (void*)state_change, &tb->feature->tabulation);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
 
     case K_SPECIAL(K_MOD_CTRL, 'y'):
       tb->select_cursor = cursor_disable(tb->select_cursor);
-      tb->cursor =
-        redo(&tb->history_frame, tb->cursor, globalOnStageChange, (void*)state_change, &tb->feature->tabulation);
+      tb->cursor = redo(&tb->history_frame, tb->cursor, NULL, (void*)state_change, &tb->feature->tabulation);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
 
@@ -778,20 +776,20 @@ bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
 
     case K_SPECIAL(K_MOD_CTRL, 'x'):
       saveToClipBoard(tb->cursor, tb->select_cursor);
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
 
     case K_SPECIAL(K_MOD_CTRL, 'v'):
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       tmp_desc = cursor_to_desc(tb->cursor);
       {
         char paste_buf[4096];
         int len = getClipboardText(paste_buf, sizeof(paste_buf));
         if (len > 0) {
-          tb->cursor = insertCharArrayAtCursorWithState(&tb->history_frame, tb->cursor, paste_buf, *state_change,
+          tb->cursor = insertCharArrayAtCursorWithState(&tb->history_frame, tb->cursor, paste_buf, state_change,
                                                         &tb->feature->tabulation);
-          saveAction(&tb->history_frame, createInsertAction(tb->cursor, tmp_desc), globalOnStageChange, &tb->cursor,
+          saveAction(&tb->history_frame, createInsertAction(tb->cursor, tmp_desc), NULL, &tb->cursor,
                      (void*)state_change);
         }
       }
@@ -802,7 +800,7 @@ bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
       if (cursor_is_disabled(tb->select_cursor)) {
         tb->select_cursor = moveLeft(tb->cursor);
       }
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
 
@@ -810,7 +808,7 @@ bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
       if (cursor_is_disabled(tb->select_cursor)) {
         tb->select_cursor = moveRight(tb->cursor);
       }
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
 
@@ -818,14 +816,14 @@ bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
     case K_SPECIAL(K_MOD_CTRL, 'h'):
       setSelectCursorOn(tb->cursor, &tb->select_cursor);
       tb->cursor = moveToPreviousWord(tb->cursor);
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
 
     case H_KEY_CTRL_SUPPR:
       setSelectCursorOn(tb->cursor, &tb->select_cursor);
       tb->cursor = moveToNextWord(tb->cursor);
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
   }
@@ -834,12 +832,11 @@ bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
   if (!K_IS_SPECIAL(key)) {
     int codepoint = K_CODE(key);
     if (codepoint != ERR && (codepoint >= 32 || codepoint == '\t' || codepoint == '\n') && codepoint != 127) {
-      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, *state_change);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
       tmp_desc = cursor_to_desc(tb->cursor);
       Char_U8 u8 = unicode_to_utf8(codepoint);
       tb->cursor = insertCharInLineC(tb->cursor, u8);
-      saveAction(&tb->history_frame, createInsertAction(tb->cursor, tmp_desc), globalOnStageChange, &tb->cursor,
-                 (void*)state_change);
+      saveAction(&tb->history_frame, createInsertAction(tb->cursor, tmp_desc), NULL, &tb->cursor, (void*)state_change);
       setDesiredColumn(tb->cursor, &tb->desired_column);
       return true;
     }

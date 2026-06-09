@@ -183,7 +183,7 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
   }
 
   // 5. Delegate text editing, navigation, selection, copy/cut/paste, and undo/redo
-  if (tb_handleKey(&state->query_buffer, key, &state->ctx->payload_state_change)) {
+  if (tb_handleKey(&state->query_buffer, key, NULL)) {
     perform_incremental_search(state);
     gui_updateGUI(&state->ctx->gui_context);
     return true;

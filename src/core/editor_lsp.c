@@ -17,7 +17,7 @@ ModuleContext buildModuleContext(EditorContext* ctx) {
   payload.files_state = filesStateOf(&ctx->files, &ctx->file_count, &ctx->current_file_index, &ctx->refresh_local_vars);
   payload.view_port = viewPortOf(&ctx->gui_context, &fc->screen_x, &fc->screen_y);
   payload.cursor = &fc->cursor;
-  payload.payload_state_change = ctx->payload_state_change;
+  payload.payload_state_change = &ctx->payload_state_change;
   return payload;
 }
 
