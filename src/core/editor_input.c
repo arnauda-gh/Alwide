@@ -195,17 +195,20 @@ static void processMouseInput(EditorContext* ctx) {
                 fprintf(stderr, "Mouse event skipped !\n");
                 // It is a drag/move event: we can continue coalescing
                 continue;
-              } else {
+              }
+              else {
                 // It is a press or release event: stop coalescing immediately so it gets processed
                 break;
               }
-            } else if (key != ERR) {
+            }
+            else if (key != ERR) {
               ctx->peek_c = key;
               break;
             }
           }
         }
-      } else {
+      }
+      else {
         ctx->peek_c = next_c;
         break;
       }

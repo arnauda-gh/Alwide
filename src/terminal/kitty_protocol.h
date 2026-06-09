@@ -1,9 +1,9 @@
 #ifndef KITTY_KEYBOARD_H
 #define KITTY_KEYBOARD_H
 
+#include <ncurses.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <ncurses.h>
 
 /* Event types reported by the Kitty keyboard protocol */
 typedef enum { KITTY_EVENT_PRESS = 1, KITTY_EVENT_REPEAT = 2, KITTY_EVENT_RELEASE = 3 } KittyEventType;
