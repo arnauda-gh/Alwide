@@ -203,7 +203,7 @@ static void handle_editor_scrolling(gui_Context* gui, int* screen_x, int* screen
   }
 }
 
-static void handle_editor_gutter_interaction(gui_Context* gui, int screen_y, const MEVENT* m, FileContainer* file,
+static bool handle_editor_gutter_interaction(gui_Context* gui, int screen_y, const MEVENT* m, FileContainer* file,
                                              WindowHighlightDescriptor* whd) {
   LSP_Diagnostic* diag = NULL;
   int row = screen_y + m->y - getbegy(gui->edw_context.lnw);
@@ -213,14 +213,22 @@ static void handle_editor_gutter_interaction(gui_Context* gui, int screen_y, con
     (marker == LSP_ERROR || marker == LSP_HINT || marker == LSP_INFORMATION || marker == LSP_WARNING);
 
   if (is_lsp_marker && diag != NULL) {
-    if (is_left_double_click(m)) {
+    if (is_left_click(m)) {
+      if (gui->edw_context.pow_owner == COMPLETION) {
+        LSP_destroyCompletionList(&file->lsp_datas.computed->completions);
+        gui_closePopup(gui);
+      }
+      file->cursor = LSP_tryToReachCursorForLSPPosition(getLSPServerForLanguage(&lsp_servers, file->lsp_datas.lang_id),
+                                                        file->cursor, diag->range.pos1);
       askCodeAction(file, &file->cursor);
     }
-    else {
+    else if (gui->edw_context.pow_owner != COMPLETION) {
       int y_pos = m->y - getbegy(gui->edw_context.lnw) + 1;
       gui_showDiagnostic(gui, y_pos, getbegy(gui->edw_context.ftw), diag, LF_tab_size(file->feature));
     }
   }
+
+  return is_lsp_marker;
 }
 
 static void handle_editor_content_interaction(gui_Context* gui, int screen_x, int screen_y, const MEVENT* m,
@@ -273,22 +281,26 @@ void handleEditorClick(gui_Context* gui, Cursor* cursor, Cursor* select_cursor, 
     m->y = off_y;
   }
 
+  // Interaction chain (matches original else-if logic)
+  if (isClickInsideWindow(gui->edw_context.lnw, m)) {
+    if (handle_editor_gutter_interaction(gui, *screen_y, m, file, whd)) {
+      return;
+    }
+  }
+
   int tab_size = LF_tab_size(file->feature);
 
   handle_editor_cursor_action(gui, cursor, select_cursor, desired_column, *screen_x, *screen_y, m, mouse_drag,
                               tab_size);
   handle_editor_scrolling(gui, screen_x, screen_y, m, cursor);
 
-  // Interaction chain (matches original else-if logic)
-  if (isClickInsideWindow(gui->edw_context.lnw, m)) {
-    handle_editor_gutter_interaction(gui, *screen_y, m, file, whd);
-  }
-  else if (isClickInsideWindow(gui->edw_context.ftw, m)) {
+
+  if (isClickInsideWindow(gui->edw_context.ftw, m)) {
     handle_editor_content_interaction(gui, *screen_x, *screen_y, m, file);
   }
   else if (gui->edw_context.show_pow == true &&
            (gui->edw_context.pow_owner == DIAGNOSTICS || gui->edw_context.pow_owner == HOVER_DIAGNOSTICS)) {
-    gui_closePopup(gui);
+    // gui_closePopup(gui);
   }
 }
 

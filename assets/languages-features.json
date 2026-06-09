@@ -311,7 +311,7 @@
     "label": "JSON",
     "id": "json",
     "detect": {
-      "extensions": [".json"],
+      "extensions": [".json", ".lock"],
       "file-name": [],
       "shebang": []
     },

@@ -274,12 +274,9 @@ void logInput(int key) {
     return;
   }
 
-  FILE* f = fopen(".logs.txt", "a");
-  if (!f) {
-    return;
-  }
+  FILE* f = stderr;
 
-  fprintf(f, "[INPUT] Key: 0x%08X | ", key);
+  fprintf(stderr, "[INPUT] Key: 0x%08X | ", key);
 
   /* Modifiers */
   if (K_HAS_CTRL(key)) {
@@ -327,5 +324,4 @@ void logInput(int key) {
   }
 
   fprintf(f, "\n");
-  fclose(f);
 }
