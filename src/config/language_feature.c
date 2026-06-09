@@ -1,19 +1,16 @@
 #include "language_feature.h"
+
 #include <libgen.h>
 #include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "../environnement/global_variables.h"
 #include "../utils/tools.h"
 #include "config.h"
 
-void initLanguageFeatureList(LF_LanguageFeatureList* list) {
-  list->list = NULL;
-  list->size = 0;
-}
-
-static LF_LanguageFeature default_feature = {
+LF_LanguageFeature default_feature = {
   .id = "plain",
   .label = "Plain Text",
   .detect = {.extensions = NULL,
@@ -26,6 +23,12 @@ static LF_LanguageFeature default_feature = {
   .tabulation = {.size = 2, .use_space = true},
   .pairs_count = 0,
   .lsp = {.exe = "", .arguments = ""}};
+
+void initLanguageFeatureList(LF_LanguageFeatureList* list) {
+  list->list = NULL;
+  list->size = 0;
+}
+
 
 /**
  * Helper to parse a JSON array of strings into a dynamically allocated contiguous array of fixed-size strings.

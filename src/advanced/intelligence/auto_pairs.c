@@ -39,7 +39,7 @@ bool ilj_handleAutoPairs(FileContainer* fc, Char_U8 input, History** history_p,
       strcat(combined, pair->close);
 
       fc->cursor =
-        insertCharArrayAtCursorWithState(history_p, fc->cursor, combined, payload_state_change, LF_tab(fc->feature));
+        insertCharArrayAtCursorWithState(history_p, fc->cursor, combined, &payload_state_change, LF_tab(fc->feature));
 
       // Move cursor back one position to be between the pairs
       fc->cursor = moveLeft(fc->cursor);
@@ -82,7 +82,7 @@ bool ilj_handleAutoPairDelete(FileContainer* fc, History** history_p, PayloadSta
       Cursor select_cursor = moveRight(fc->cursor);
       fc->cursor = moveLeft(fc->cursor);
 
-      deleteSelectionWithState(history_p, &fc->cursor, &select_cursor, payload_state_change);
+      deleteSelectionWithState(history_p, &fc->cursor, &select_cursor, &payload_state_change);
 
       return true;
     }

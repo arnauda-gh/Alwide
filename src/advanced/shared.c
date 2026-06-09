@@ -2,8 +2,11 @@
 
 #include "../advanced/lsp/lsp_emitter.h"
 
-void globalOnStageChange(Action action, Cursor* cursor, void* payload_p) {
+void globalOnStateChange(Action action, Cursor* cursor, void* payload_p) {
   PayloadStateChange* payload = payload_p;
+  if (payload == NULL) {
+    return;
+  }
   onStateChangeTS(action, payload->ts_data);
   onStateChangeLSP(action, payload->lsp_data, cursor);
 }

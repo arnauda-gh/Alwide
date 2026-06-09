@@ -10,7 +10,7 @@
 #include "../lsp_client.h"
 
 void executeLSPCompletion(LSP_Server* lsp, Cursor* cursor, LSP_CompletionItem* item, History** history_p,
-                          PayloadStateChange payload_state_change, LF_Tabulation* tab);
+                          PayloadStateChange *payload_state_change, LF_Tabulation* tab);
 
 
 void askCompletion(gui_Context* gui_context, FileContainer* fc, bool reset, bool force);

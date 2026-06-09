@@ -4,7 +4,8 @@
 
 #include "../../io-management/viewport_history.h"
 
-bool gui_resumeHoverInformation(Cursor* cursor, ViewPort* view_port, FileContainer* file, LSP_Hover* hover, int tab_size);
+bool gui_resumeHoverInformation(Cursor* cursor, ViewPort* view_port, FileContainer* file, LSP_Hover* hover,
+                                int tab_size);
 
 bool gui_resumeGotoChoice(ViewPort* view_port, Cursor* cursor, int tab_size);
 
@@ -27,7 +28,7 @@ typedef struct ModuleContext ModuleContext;
 
 #include "../../data-management/file_management.h"
 
-bool gui_handlePopupInput(gui_Context* context, FileContainer* fc, int key, PayloadStateChange payload_state_change,
+bool gui_handlePopupInput(gui_Context* context, FileContainer* fc, int key, PayloadStateChange* payload_state_change,
                           ModuleContext* payload, MEVENT* m_event);
 
 #endif // WISHWIM_POW_H

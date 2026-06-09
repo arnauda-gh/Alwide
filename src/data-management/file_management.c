@@ -1,5 +1,4 @@
 #include "file_management.h"
-#include "../config/language_feature.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -7,10 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../config/language_feature.h"
 #include "../environnement/global_variables.h"
 #include "../io-management/viewport_history.h"
+#include "../terminal/key_management.h"
 #include "../terminal/term_handler.h"
-
+#include "../utils/clipboard_manager.h"
+#include "encoding/utf8.h"
 
 ////// -------------- FILE CONTAINER --------------
 
@@ -399,11 +401,11 @@ Cursor insertCharArrayAtCursor(Cursor cursor, char* chs, LF_Tabulation* tab) {
 }
 
 Cursor insertCharArrayAtCursorWithState(History** history_p, Cursor cursor, char* chs,
-                                        PayloadStateChange payload_state_change, LF_Tabulation* tab) {
+                                        PayloadStateChange* payload_state_change, LF_Tabulation* tab) {
   Cursor tmp = cursor;
   cursor = insertCharArrayAtCursor(cursor, chs, tab);
-  saveAction(history_p, createInsertAction(tmp, cursor_to_desc(cursor)), globalOnStageChange, &cursor,
-             &payload_state_change);
+  saveAction(history_p, createInsertAction(tmp, cursor_to_desc(cursor)), globalOnStateChange, &cursor,
+             payload_state_change);
 
   return cursor;
 }
@@ -439,6 +441,9 @@ Cursor goToBegin(Cursor cursor) {
 
 
 int utf8CharBetween2Cursor(Cursor cur1, Cursor cur2) {
+  if (cursor_eq(cur1, cur2)) {
+    return 0;
+  }
   if (cursor_le(cur2, cur1)) {
     Cursor tmp = cur1;
     cur1 = cur2;
@@ -446,8 +451,12 @@ int utf8CharBetween2Cursor(Cursor cur1, Cursor cur2) {
   }
 
   int count = 0;
-  while (cursor_le(cur1, cur2)) {
-    cur1 = moveRight(cur1);
+  while (cursor_lt(cur1, cur2)) {
+    Cursor next = moveRight(cur1);
+    if (cursor_eq(cur1, next)) {
+      break;
+    }
+    cur1 = next;
     count++;
   }
   return count;
@@ -548,14 +557,21 @@ void deleteSelection(Cursor* cursor, Cursor* select_cursor) {
 }
 
 void deleteSelectionWithState(History** history_p, Cursor* cursor, Cursor* select_cursor,
-                              PayloadStateChange payload_state_change) {
-  saveAction(history_p, createDeleteAction(*cursor, cursor_to_desc(*select_cursor)), globalOnStageChange, cursor,
-             (void*)&payload_state_change);
+                              PayloadStateChange* payload_state_change) {
+  saveAction(history_p, createDeleteAction(*cursor, cursor_to_desc(*select_cursor)), globalOnStateChange, cursor,
+             (void*)payload_state_change);
   deleteSelection(cursor, select_cursor);
 }
 
 
 char* dumpSelection(Cursor cur1, Cursor cur2) {
+  if (cursor_is_disabled(cur1) || cursor_is_disabled(cur2)) {
+    char* dump = malloc(1 * sizeof(char));
+    dump[0] = '\0';
+    return dump;
+  }
+
+
   if (cursor_le(cur2, cur1)) {
     Cursor tmp = cur1;
     cur1 = cur2;
@@ -613,5 +629,218 @@ bool isAfterAWord(Cursor* cursor) {
   if (u8.t[0] == '.') {
     return true;
   }
+  return false;
+}
+
+void initTextBuffer(TextBuffer* tb, LF_LanguageFeature* feature) {
+  tb->cursor = initNewWrittableFile();
+  tb->root = tb->cursor.file_id.file;
+  tb->select_cursor = cursor_disable(tb->cursor);
+  tb->desired_column = 0;
+
+  tb->history_root = malloc(sizeof(History));
+  initHistory(tb->history_root);
+  tb->history_frame = tb->history_root;
+
+  tb->feature = feature;
+}
+
+void destroyTextBuffer(TextBuffer* tb) {
+  destroyFullFile(tb->root);
+  destroyEndOfHistory(tb->history_root);
+  free(tb->history_root);
+}
+
+bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change) {
+  CursorDescriptor tmp_desc;
+
+  switch (key) {
+    case H_KEY_LEFT:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->cursor = moveLeft(tb->cursor);
+      }
+      setSelectCursorOff(&tb->cursor, &tb->select_cursor, SELECT_OFF_LEFT);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_RIGHT:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->cursor = moveRight(tb->cursor);
+      }
+      setSelectCursorOff(&tb->cursor, &tb->select_cursor, SELECT_OFF_RIGHT);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_UP:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->cursor = moveUp(tb->cursor, tb->desired_column);
+      }
+      setSelectCursorOff(&tb->cursor, &tb->select_cursor, SELECT_OFF_LEFT);
+      return true;
+
+    case H_KEY_DOWN:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->cursor = moveDown(tb->cursor, tb->desired_column);
+      }
+      setSelectCursorOff(&tb->cursor, &tb->select_cursor, SELECT_OFF_RIGHT);
+      return true;
+
+    case H_KEY_MAJ_LEFT:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveLeft(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_MAJ_RIGHT:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveRight(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_MAJ_UP:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveUp(tb->cursor, tb->desired_column);
+      return true;
+
+    case H_KEY_MAJ_DOWN:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveDown(tb->cursor, tb->desired_column);
+      return true;
+
+    case H_KEY_CTRL_LEFT:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->cursor = moveToPreviousWord(tb->cursor);
+      }
+      setSelectCursorOff(&tb->cursor, &tb->select_cursor, SELECT_OFF_LEFT);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_CTRL_RIGHT:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->cursor = moveToNextWord(tb->cursor);
+      }
+      setSelectCursorOff(&tb->cursor, &tb->select_cursor, SELECT_OFF_RIGHT);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_CTRL_MAJ_LEFT:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveToPreviousWord(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_CTRL_MAJ_RIGHT:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveToNextWord(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_BEGIN:
+      tb->select_cursor = cursor_disable(tb->select_cursor);
+      tb->cursor = goToBegin(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_END:
+      tb->select_cursor = cursor_disable(tb->select_cursor);
+      tb->cursor = goToEnd(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_MAJ_END:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = goToEnd(tb->cursor);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case K_SPECIAL(K_MOD_CTRL, 'a'):
+      tb->select_cursor = tryToReachAbsPosition(tb->cursor, 1, 0);
+      tb->cursor = tryToReachAbsPosition(tb->cursor, INT_MAX, INT_MAX);
+      return true;
+
+    case K_SPECIAL(K_MOD_CTRL, 'z'):
+      tb->select_cursor = cursor_disable(tb->select_cursor);
+      tb->cursor = undo(&tb->history_frame, tb->cursor, NULL, (void*)state_change, &tb->feature->tabulation);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case K_SPECIAL(K_MOD_CTRL, 'y'):
+      tb->select_cursor = cursor_disable(tb->select_cursor);
+      tb->cursor = redo(&tb->history_frame, tb->cursor, NULL, (void*)state_change, &tb->feature->tabulation);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case K_SPECIAL(K_MOD_CTRL, 'c'):
+      saveToClipBoard(tb->cursor, tb->select_cursor);
+      return true;
+
+    case K_SPECIAL(K_MOD_CTRL, 'x'):
+      saveToClipBoard(tb->cursor, tb->select_cursor);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case K_SPECIAL(K_MOD_CTRL, 'v'):
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      tmp_desc = cursor_to_desc(tb->cursor);
+      {
+        char paste_buf[4096];
+        int len = getClipboardText(paste_buf, sizeof(paste_buf));
+        if (len > 0) {
+          tb->cursor = insertCharArrayAtCursorWithState(&tb->history_frame, tb->cursor, paste_buf, state_change,
+                                                        &tb->feature->tabulation);
+          saveAction(&tb->history_frame, createInsertAction(tb->cursor, tmp_desc), NULL, &tb->cursor,
+                     (void*)state_change);
+        }
+      }
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_BACKSPACE: // same as H_KEY_DELETE
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->select_cursor = moveLeft(tb->cursor);
+      }
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_SUPPR:
+      if (cursor_is_disabled(tb->select_cursor)) {
+        tb->select_cursor = moveRight(tb->cursor);
+      }
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_CTRL_DELETE:
+    case K_SPECIAL(K_MOD_CTRL, 'h'):
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveToPreviousWord(tb->cursor);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+
+    case H_KEY_CTRL_SUPPR:
+      setSelectCursorOn(tb->cursor, &tb->select_cursor);
+      tb->cursor = moveToNextWord(tb->cursor);
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+  }
+
+  // Printable UTF-8 codepoints
+  if (!K_IS_SPECIAL(key)) {
+    int codepoint = K_CODE(key);
+    if (codepoint != ERR && (codepoint >= 32 || codepoint == '\t' || codepoint == '\n') && codepoint != 127) {
+      deleteSelectionWithState(&tb->history_frame, &tb->cursor, &tb->select_cursor, state_change);
+      tmp_desc = cursor_to_desc(tb->cursor);
+      Char_U8 u8 = unicode_to_utf8(codepoint);
+      tb->cursor = insertCharInLineC(tb->cursor, u8);
+      saveAction(&tb->history_frame, createInsertAction(tb->cursor, tmp_desc), NULL, &tb->cursor, (void*)state_change);
+      setDesiredColumn(tb->cursor, &tb->desired_column);
+      return true;
+    }
+  }
+
   return false;
 }

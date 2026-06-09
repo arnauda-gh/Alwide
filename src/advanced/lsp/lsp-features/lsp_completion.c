@@ -44,7 +44,7 @@ LSP_Range getReplaceRange(LSP_Server* lsp, Cursor* cursor, char insertText[METHO
 }
 
 void executeLSPCompletion(LSP_Server* lsp, Cursor* cursor, LSP_CompletionItem* item, History** history_p,
-                          PayloadStateChange payload_state_change, LF_Tabulation* tab) {
+                          PayloadStateChange *payload_state_change, LF_Tabulation* tab) {
   if (!item->is_text_edit) {
     // copy the text to the edit.
     item->text_edit.new_text = malloc(sizeof(char) * METHOD_MAX_LENGTH);

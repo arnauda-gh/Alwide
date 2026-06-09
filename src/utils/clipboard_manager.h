@@ -12,4 +12,6 @@ bool saveToClipBoard(Cursor begin, Cursor end);
 
 Cursor loadFromClipBoard(FileContainer* fc);
 
+int getClipboardText(char* buf, int max_len);
+
 #endif // CLIPBOARD_MANAGER_H
