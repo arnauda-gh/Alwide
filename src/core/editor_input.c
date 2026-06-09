@@ -493,7 +493,9 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       *cursor = tryToReachAbsPosition(*cursor, INT_MAX, INT_MAX);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'f'):
-      gui_openSearchPopup(ctx);
+      char *query = dumpSelection(*cursor, *select_cursor);
+      gui_openSearchPopup(ctx, query);
+      free(query);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'x'):
       saveToClipBoard(*cursor, *select_cursor);

@@ -4,12 +4,15 @@
 #include <sys/ttydefaults.h>
 #include "../../../advanced/intelligence/search.h"
 #include "../../../environnement/constants.h"
+#include "../../../utils/clipboard_manager.h"
 #include "../../key_management.h"
 #include "../../term_handler.h"
 #include "../tpw.h"
 
+#define SEARCH_QUERY_LENGTH 128
+
 typedef struct {
-  char query[128];
+  char query[SEARCH_QUERY_LENGTH];
   int query_len;
   bool case_sensitive;
   bool wrap;
@@ -150,6 +153,29 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
     return true;
   }
 
+
+  if (key == K_SPECIAL(K_MOD_CTRL, 'v')) {
+    char paste_buf[SEARCH_QUERY_LENGTH];
+    int read_bytes = getClipboardText(paste_buf, SEARCH_QUERY_LENGTH);
+    if (read_bytes > 0) {
+      for (int i = 0; i < read_bytes; i++) {
+        char c = paste_buf[i];
+        if (c >= 32 && c < 127) { // Standard printable ASCII for search
+          if (state->query_len < SEARCH_QUERY_LENGTH - 1) {
+            state->query[state->query_len++] = c;
+          } else {
+            break;
+          }
+        }
+      }
+      state->query[state->query_len] = '\0';
+      perform_incremental_search(state);
+    }
+    gui_updateGUI(&state->ctx->gui_context);
+    return true;
+  }
+
+
   // 6. Character input
   if (!K_IS_SPECIAL(key)) {
     int codepoint = K_CODE(key);
@@ -164,6 +190,7 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
     }
   }
 
+
   // Consume any other key inputs so they do not fall back into the editor
   return true;
 }
@@ -175,14 +202,18 @@ static void destroy_search_popup(gui_TPW* popup, void* payload) {
   }
 }
 
-void gui_openSearchPopup(EditorContext* ctx) {
+void gui_openSearchPopup(EditorContext* ctx, char* query) {
   SearchPopupContext* state = malloc(sizeof(SearchPopupContext));
   if (!state) {
     return;
   }
 
-  state->query[0] = '\0';
-  state->query_len = 0;
+  if (query == NULL) {
+    query = "";
+  }
+
+  strncpy(state->query, query, SEARCH_QUERY_LENGTH);
+  state->query_len = strlen(query);
   state->case_sensitive = false;
   state->wrap = true;
   state->ctx = ctx;
