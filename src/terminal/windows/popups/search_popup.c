@@ -1,19 +1,19 @@
 #include "search_popup.h"
+
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ttydefaults.h>
+
 #include "../../../advanced/intelligence/search.h"
+#include "../../../data-management/file_management.h"
 #include "../../../environnement/constants.h"
 #include "../../../utils/clipboard_manager.h"
 #include "../../key_management.h"
 #include "../../term_handler.h"
 #include "../tpw.h"
 
-#define SEARCH_QUERY_LENGTH 128
-
 typedef struct {
-  char query[SEARCH_QUERY_LENGTH];
-  int query_len;
+  TextBuffer query_buffer;
   bool case_sensitive;
   bool wrap;
   Cursor initial_cursor;
@@ -38,13 +38,37 @@ static void paint_search_popup(gui_TPW* popup, void* payload) {
   mvwprintw(w, 1, 2, "[Aa] Case-sensitive: %s (Ctrl+G to toggle)", state->case_sensitive ? "ON" : "OFF");
 
   // Query Field
-  mvwprintw(w, 2, 2, "Search: %s", state->query);
+  Cursor start = tryToReachAbsPosition(state->query_buffer.cursor, 1, 0);
+  Cursor end = tryToReachAbsPosition(state->query_buffer.cursor, INT_MAX, INT_MAX);
+  char* query_str = dumpSelection(start, end);
+  mvwprintw(w, 2, 2, "Search: %s", query_str);
 
-  // Simulated cursor
-  int cursor_x = 10 + state->query_len;
-  if (cursor_x < width - 2) {
-    mvwchgat(w, 2, cursor_x, 1, A_REVERSE, INFO_COLOR_PAIR, NULL);
+  // Simulated cursor & Selection
+  int cursor_char_pos = utf8CharBetween2Cursor(start, state->query_buffer.cursor);
+  if (cursor_is_disabled(state->query_buffer.select_cursor)) {
+    int cursor_x = 10 + cursor_char_pos;
+    if (cursor_x < width - 2) {
+      mvwchgat(w, 2, cursor_x, 1, A_REVERSE, INFO_COLOR_PAIR, NULL);
+    }
   }
+  else {
+    int select_char_pos = utf8CharBetween2Cursor(start, state->query_buffer.select_cursor);
+    int min_pos = cursor_char_pos < select_char_pos ? cursor_char_pos : select_char_pos;
+    int max_pos = cursor_char_pos > select_char_pos ? cursor_char_pos : select_char_pos;
+    int cursor_x = 10 + min_pos;
+    int highlight_len = max_pos - min_pos;
+    if (highlight_len == 0) {
+      highlight_len = 1;
+    }
+    if (cursor_x < width - 2) {
+      if (cursor_x + highlight_len > width - 2) {
+        highlight_len = (width - 2) - cursor_x;
+      }
+      mvwchgat(w, 2, cursor_x, highlight_len, A_REVERSE, INFO_COLOR_PAIR, NULL);
+    }
+  }
+
+  free(query_str);
 
   // Status message / Instruction footer
   if (state->last_search_failed) {
@@ -59,12 +83,18 @@ static void paint_search_popup(gui_TPW* popup, void* payload) {
 
 static void perform_incremental_search(SearchPopupContext* state) {
   FileContainer* fc = &state->ctx->files[state->ctx->current_file_index];
-  if (state->query_len == 0) {
+
+  Cursor start = tryToReachAbsPosition(state->query_buffer.cursor, 1, 0);
+  Cursor end = tryToReachAbsPosition(state->query_buffer.cursor, INT_MAX, INT_MAX);
+  char* query_str = dumpSelection(start, end);
+
+  if (strlen(query_str) == 0) {
     fc->cursor = state->initial_cursor;
     fc->select_cursor = cursor_disable(fc->select_cursor);
     state->last_search_failed = false;
     moveScreenToMatchCursor(&state->ctx->gui_context, fc->cursor, &fc->screen_x, &fc->screen_y,
                             LF_tab_size(fc->feature));
+    free(query_str);
     return;
   }
 
@@ -72,7 +102,7 @@ static void perform_incremental_search(SearchPopupContext* state) {
   fc->cursor = state->initial_cursor;
 
   Cursor start_cur, end_cur;
-  if (ilj_findNext(fc, state->query, state->case_sensitive, true, &start_cur, &end_cur)) {
+  if (ilj_findNext(fc, query_str, state->case_sensitive, true, &start_cur, &end_cur)) {
     fc->select_cursor = start_cur;
     fc->cursor = end_cur;
     state->last_search_failed = false;
@@ -83,6 +113,7 @@ static void perform_incremental_search(SearchPopupContext* state) {
     fc->cursor = orig_cursor;
     state->last_search_failed = true;
   }
+  free(query_str);
 }
 
 static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* payload) {
@@ -105,11 +136,14 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
     return true;
   }
 
-  // 3. ENTER / Ctrl+N: Find Next
+  // 3. ENTER / Find Next
   if (key == H_KEY_ENTER) {
-    if (state->query_len > 0) {
+    Cursor start = tryToReachAbsPosition(state->query_buffer.cursor, 1, 0);
+    Cursor end = tryToReachAbsPosition(state->query_buffer.cursor, INT_MAX, INT_MAX);
+    char* query_str = dumpSelection(start, end);
+    if (strlen(query_str) > 0) {
       Cursor start_cur, end_cur;
-      if (ilj_findNext(fc, state->query, state->case_sensitive, state->wrap, &start_cur, &end_cur)) {
+      if (ilj_findNext(fc, query_str, state->case_sensitive, state->wrap, &start_cur, &end_cur)) {
         fc->select_cursor = start_cur;
         fc->cursor = end_cur;
         state->last_search_failed = false;
@@ -120,15 +154,19 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
         state->last_search_failed = true;
       }
     }
+    free(query_str);
     gui_updateGUI(&state->ctx->gui_context);
     return true;
   }
 
   // 4. Ctrl+P: Find Prev
   if (key == K_SPECIAL(K_MOD_CTRL, 'p')) {
-    if (state->query_len > 0) {
+    Cursor start = tryToReachAbsPosition(state->query_buffer.cursor, 1, 0);
+    Cursor end = tryToReachAbsPosition(state->query_buffer.cursor, INT_MAX, INT_MAX);
+    char* query_str = dumpSelection(start, end);
+    if (strlen(query_str) > 0) {
       Cursor start_cur, end_cur;
-      if (ilj_findPrev(fc, state->query, state->case_sensitive, state->wrap, &start_cur, &end_cur)) {
+      if (ilj_findPrev(fc, query_str, state->case_sensitive, state->wrap, &start_cur, &end_cur)) {
         fc->select_cursor = start_cur;
         fc->cursor = end_cur;
         state->last_search_failed = false;
@@ -139,56 +177,17 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
         state->last_search_failed = true;
       }
     }
+    free(query_str);
     gui_updateGUI(&state->ctx->gui_context);
     return true;
   }
 
-  // 5. Backspace
-  if (key == H_KEY_BACKSPACE) {
-    if (state->query_len > 0) {
-      state->query[--state->query_len] = '\0';
-      perform_incremental_search(state);
-    }
+  // 5. Delegate text editing, navigation, selection, copy/cut/paste, and undo/redo
+  if (tb_handleKey(&state->query_buffer, key, &state->ctx->payload_state_change)) {
+    perform_incremental_search(state);
     gui_updateGUI(&state->ctx->gui_context);
     return true;
   }
-
-
-  if (key == K_SPECIAL(K_MOD_CTRL, 'v')) {
-    char paste_buf[SEARCH_QUERY_LENGTH];
-    int read_bytes = getClipboardText(paste_buf, SEARCH_QUERY_LENGTH);
-    if (read_bytes > 0) {
-      for (int i = 0; i < read_bytes; i++) {
-        char c = paste_buf[i];
-        if (state->query_len < SEARCH_QUERY_LENGTH - 1) {
-          state->query[state->query_len++] = c;
-        }
-        else {
-          break;
-        }
-      }
-      state->query[state->query_len] = '\0';
-      perform_incremental_search(state);
-    }
-    gui_updateGUI(&state->ctx->gui_context);
-    return true;
-  }
-
-
-  // 6. Character input
-  if (!K_IS_SPECIAL(key)) {
-    int codepoint = K_CODE(key);
-    if (codepoint >= 32 && codepoint < 127) { /* Standard printable ASCII for search */
-      if (state->query_len < 127) {
-        state->query[state->query_len++] = (char)codepoint;
-        state->query[state->query_len] = '\0';
-        perform_incremental_search(state);
-      }
-      gui_updateGUI(&state->ctx->gui_context);
-      return true;
-    }
-  }
-
 
   // Consume any other key inputs so they do not fall back into the editor
   return true;
@@ -197,6 +196,7 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
 static void destroy_search_popup(gui_TPW* popup, void* payload) {
   SearchPopupContext* state = (SearchPopupContext*)payload;
   if (state) {
+    destroyTextBuffer(&state->query_buffer);
     free(state);
   }
 }
@@ -207,13 +207,14 @@ void gui_openSearchPopup(EditorContext* ctx, char* query) {
     return;
   }
 
-  if (query == NULL) {
-    query = "";
-    state->query[0] = '\0';
+  initTextBuffer(&state->query_buffer, &default_feature);
+
+  if (query != NULL && strlen(query) > 0) {
+    state->query_buffer.cursor =
+      insertCharArrayAtCursor(state->query_buffer.cursor, query, &state->query_buffer.feature->tabulation);
+    setDesiredColumn(state->query_buffer.cursor, &state->query_buffer.desired_column);
   }
 
-  strncpy(state->query, query, SEARCH_QUERY_LENGTH);
-  state->query_len = strlen(query);
   state->case_sensitive = false;
   state->wrap = true;
   state->ctx = ctx;

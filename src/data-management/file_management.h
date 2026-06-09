@@ -10,7 +10,6 @@
 
 
 typedef struct {
-  IO_FileID io_file;           // Describe the IO file on OS
   FileNode* root;              // The root of the File object
   Cursor cursor;               // The current cursor for the root File
   Cursor select_cursor;        // The cursor used to make selection
@@ -22,9 +21,34 @@ typedef struct {
   int old_screen_y;            // old screen_y used to flag screen_y changes
   History* history_root;       // Root of History object for the current File
   History* history_frame;      // Current node of the History. Before -> Undo, After -> Redo.
-  TS_Data highlight_data;      // Object which represent the highlight_data of the current file.
-  LSP_Data lsp_datas;          // Object which contain all the datas of lsp.
   LF_LanguageFeature* feature; // Language feature config detected for this file (tabs, pairs, LSP, comments).
+} TextBuffer;
+
+void initTextBuffer(TextBuffer* tb, LF_LanguageFeature* feature);
+void destroyTextBuffer(TextBuffer* tb);
+bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change);
+
+typedef struct {
+  IO_FileID io_file; // Describe the IO file on OS
+  union {
+    struct {
+      FileNode* root;              // The root of the File object
+      Cursor cursor;               // The current cursor for the root File
+      Cursor select_cursor;        // The cursor used to make selection
+      Cursor old_cur;              // Old cursor used to flag cursor change
+      int desired_column;          // Used on line change to try to reach column
+      int screen_x;                // The x coord of the top left corner of the current viewport of the file
+      int screen_y;                // The y coord of the top left corner of the current viewport of the file
+      int old_screen_x;            // old screen_x used to flag screen_x changes
+      int old_screen_y;            // old screen_y used to flag screen_y changes
+      History* history_root;       // Root of History object for the current File
+      History* history_frame;      // Current node of the History. Before -> Undo, After -> Redo.
+      LF_LanguageFeature* feature; // Language feature config detected for this file (tabs, pairs, LSP, comments).
+    };
+    TextBuffer buffer;
+  };
+  TS_Data highlight_data; // Object which represent the highlight_data of the current file.
+  LSP_Data lsp_datas;     // Object which contain all the datas of lsp.
 } FileContainer;
 
 typedef struct {

@@ -3,12 +3,6 @@
 #include "advanced/tree-sitter/tree_manager.h"
 #include "config/config.h"
 #include "config/language_feature.h"
-#include "data-management/file_management.h"
-#include "environnement/global_variables.h"
-#include "io-management/workspace_settings.h"
-#include "terminal/highlight.h"
-#include "terminal/term_handler.h"
-
 #include "core/editor_context.h"
 #include "core/editor_destroy.h"
 #include "core/editor_init.h"
@@ -16,8 +10,13 @@
 #include "core/editor_lsp.h"
 #include "core/editor_render.h"
 #include "core/editor_state.h"
+#include "data-management/file_management.h"
+#include "environnement/global_variables.h"
 #include "environnement/setup.h"
+#include "io-management/workspace_settings.h"
+#include "terminal/highlight.h"
 #include "terminal/key_management.h"
+#include "terminal/term_handler.h"
 
 // Global vars.
 int color_pair = 6;

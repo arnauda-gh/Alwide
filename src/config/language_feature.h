@@ -76,6 +76,8 @@ typedef struct {
   int size;
 } LF_LanguageFeatureList;
 
+extern LF_LanguageFeature default_feature;
+
 void initLanguageFeatureList(LF_LanguageFeatureList* list);
 void destroyLanguageFeatureList(LF_LanguageFeatureList* list);
 
