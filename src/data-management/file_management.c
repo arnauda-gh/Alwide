@@ -556,6 +556,13 @@ void deleteSelectionWithState(History** history_p, Cursor* cursor, Cursor* selec
 
 
 char* dumpSelection(Cursor cur1, Cursor cur2) {
+  if (cursor_is_disabled(cur1) || cursor_is_disabled(cur2)) {
+    char* dump = malloc(1 * sizeof(char));
+    dump[0] = '\0';
+    return dump;
+  }
+
+
   if (cursor_le(cur2, cur1)) {
     Cursor tmp = cur1;
     cur1 = cur2;

@@ -160,12 +160,11 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
     if (read_bytes > 0) {
       for (int i = 0; i < read_bytes; i++) {
         char c = paste_buf[i];
-        if (c >= 32 && c < 127) { // Standard printable ASCII for search
-          if (state->query_len < SEARCH_QUERY_LENGTH - 1) {
-            state->query[state->query_len++] = c;
-          } else {
-            break;
-          }
+        if (state->query_len < SEARCH_QUERY_LENGTH - 1) {
+          state->query[state->query_len++] = c;
+        }
+        else {
+          break;
         }
       }
       state->query[state->query_len] = '\0';
@@ -210,6 +209,7 @@ void gui_openSearchPopup(EditorContext* ctx, char* query) {
 
   if (query == NULL) {
     query = "";
+    state->query[0] = '\0';
   }
 
   strncpy(state->query, query, SEARCH_QUERY_LENGTH);
