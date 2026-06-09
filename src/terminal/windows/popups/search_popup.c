@@ -11,6 +11,7 @@
 #include "../../key_management.h"
 #include "../../term_handler.h"
 #include "../tpw.h"
+#include "../widgets/text_box.h"
 
 typedef struct {
   TextBuffer query_buffer;
@@ -38,37 +39,8 @@ static void paint_search_popup(gui_TPW* popup, void* payload) {
   mvwprintw(w, 1, 2, "[Aa] Case-sensitive: %s (Ctrl+G to toggle)", state->case_sensitive ? "ON" : "OFF");
 
   // Query Field
-  Cursor start = tryToReachAbsPosition(state->query_buffer.cursor, 1, 0);
-  Cursor end = tryToReachAbsPosition(state->query_buffer.cursor, INT_MAX, INT_MAX);
-  char* query_str = dumpSelection(start, end);
-  mvwprintw(w, 2, 2, "Search: %s", query_str);
-
-  // Simulated cursor & Selection
-  int cursor_char_pos = utf8CharBetween2Cursor(start, state->query_buffer.cursor);
-  if (cursor_is_disabled(state->query_buffer.select_cursor)) {
-    int cursor_x = 10 + cursor_char_pos;
-    if (cursor_x < width - 2) {
-      mvwchgat(w, 2, cursor_x, 1, A_REVERSE, INFO_COLOR_PAIR, NULL);
-    }
-  }
-  else {
-    int select_char_pos = utf8CharBetween2Cursor(start, state->query_buffer.select_cursor);
-    int min_pos = cursor_char_pos < select_char_pos ? cursor_char_pos : select_char_pos;
-    int max_pos = cursor_char_pos > select_char_pos ? cursor_char_pos : select_char_pos;
-    int cursor_x = 10 + min_pos;
-    int highlight_len = max_pos - min_pos;
-    if (highlight_len == 0) {
-      highlight_len = 1;
-    }
-    if (cursor_x < width - 2) {
-      if (cursor_x + highlight_len > width - 2) {
-        highlight_len = (width - 2) - cursor_x;
-      }
-      mvwchgat(w, 2, cursor_x, highlight_len, A_REVERSE, INFO_COLOR_PAIR, NULL);
-    }
-  }
-
-  free(query_str);
+  mvwprintw(w, 2, 2, "Search: ");
+  renderTextBuffer(w, &state->query_buffer, 10, 2, width - 12, 1);
 
   // Status message / Instruction footer
   if (state->last_search_failed) {

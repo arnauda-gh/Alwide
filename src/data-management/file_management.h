@@ -1,6 +1,7 @@
 #ifndef FILE_MANAGEMENT_H
 #define FILE_MANAGEMENT_H
 
+#include <ncurses.h>
 #include "../advanced/lsp/lsp_handler.h"
 #include "../advanced/shared.h"
 #include "../advanced/tree-sitter/tree_manager.h"

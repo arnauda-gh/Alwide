@@ -645,6 +645,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
     case H_KEY_ESCAPE:
     case K_SPECIAL(K_MOD_CTRL, '['):
       gui_closePopup(&ctx->gui_context);
+      setSelectCursorOff(cursor, select_cursor, SELECT_OFF_RIGHT);
       break;
     default:
       /* Unmapped command, release, or hotkey sequence: safely ignore it */
