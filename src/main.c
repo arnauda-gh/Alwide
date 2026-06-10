@@ -81,10 +81,10 @@ int main(int file_count, char** args) {
 
     //// ---- BEGIN background / delayed operations BLOCK ----
 
-    // handle lsp servers
-    handleLspServers(&ctx, &key);
+    // run background tasks (notifications expiry, etc.)
+    runBackgroundProcess(&ctx, &key);
 
-    // if lsp ask to refresh local_vars we have to execute post processing
+    // if a background process ask to refresh local_vars we have to execute post processing
     if (ctx.refresh_local_vars) {
       // !! WARNING !!: careful we may drop an input doing this jump. We consider this drop non important.
       continue;

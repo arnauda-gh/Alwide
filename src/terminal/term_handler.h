@@ -27,7 +27,6 @@ void gui_resetFocus(gui_Context* gui_context);
 void gui_repaintGUI(gui_Context* gui_context, WindowHighlightDescriptor* highlight_descriptor, ExplorerFolder* explorer,
                     FileContainer* files, int file_count, int current_file);
 
-void gui_printChar_U8ToNcurses(WINDOW* w, Char_U8 ch);
 
 LineMarker gui_getMarkerForCurrentLine(int row, WindowHighlightDescriptor* highlight_descriptor, int whd_offset,
                                        void** diagnostic);
@@ -54,8 +53,6 @@ LineIdentifier getLineIdForScreenX(LineIdentifier line_id, int screen_x, int x_c
 
 void setDesiredColumn(Cursor cursor, int* desired_column);
 
-void printToWindow(WINDOW* w, char* ch, int length, int offset_x, int offset_y, int line_length, int max_line_number,
-                   int tab_size);
 
 
 #endif // NCURSES_HANDLER_H

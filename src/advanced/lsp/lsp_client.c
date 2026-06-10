@@ -461,6 +461,17 @@ bool LSP_popResponseContext(LSP_Server* server, LSP_PacketID id, LSP_ResponseCon
   return false;
 }
 
+bool LSP_hasPendingRequest(LSP_Server* server, char* method) {
+  LSP_ResponseContext* current = server->response_contexts;
+  while (current != NULL) {
+    if (strcmp(current->method, method) == 0) {
+      return true;
+    }
+    current = current->next;
+  }
+  return false;
+}
+
 void LSP_clearResponseContext(LSP_Server* server) {
   LSP_ResponseContext* current = server->response_contexts;
   while (current != NULL) {

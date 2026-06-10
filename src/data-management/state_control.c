@@ -258,13 +258,9 @@ void destroyEndOfHistory(History* history) {
 }
 
 
-void createTmpDir() {
-  char command[PATH_MAX];
-  snprintf(command, sizeof(command), "mkdir -p \"%s\"", FILE_STATE_PATH);
-  system(command);
-}
+void createTmpDir() { mkdir_p(FILE_STATE_PATH, 0777); }
 
-void saveCurrentStateControl(History root, History* current_state, char* fileName) {
+bool saveCurrentStateControl(History root, History* current_state, char* fileName) {
   createTmpDir();
 
   char fileStateControl[PATH_MAX];
@@ -274,7 +270,7 @@ void saveCurrentStateControl(History root, History* current_state, char* fileNam
   FILE* f = fopen(fileStateControl, "w");
   if (f == NULL) {
     fprintf(stderr, "Impossible to save state control, couldn't open file %s.\r\n", fileStateControl);
-    return;
+    return false;
   }
 
   struct stat attr;
@@ -308,8 +304,8 @@ void saveCurrentStateControl(History root, History* current_state, char* fileNam
     current = current->next;
   }
 
-
   fclose(f);
+  return true;
 }
 
 void loadCurrentStateControl(History* root, History** current_state, IO_FileID io_file) {

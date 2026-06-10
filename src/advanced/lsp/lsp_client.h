@@ -97,6 +97,7 @@ LSP_PACKET_TYPE LSP_getPacketType(cJSON* content);
 
 void LSP_addResponseContext(LSP_Server* server, LSP_PacketID id, char* method, char* file_name, void* payload);
 bool LSP_popResponseContext(LSP_Server* server, LSP_PacketID id, LSP_ResponseContext* context);
+bool LSP_hasPendingRequest(LSP_Server* server, char* method);
 void LSP_clearResponseContext(LSP_Server* server);
 
 //////// ----------------- Created Functions ---------------

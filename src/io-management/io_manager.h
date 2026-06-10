@@ -22,7 +22,7 @@ Cursor initWrittableFileFromFile(char* fileName, LF_Tabulation* tab);
 
 bool loadFile(Cursor cursor, char* fileName, LF_Tabulation* tab);
 
-void saveFile(FileNode* root, IO_FileID* file);
+bool saveFile(FileNode* root, IO_FileID* file);
 
 void setupFile(char* path, IO_FileID* file);
 
