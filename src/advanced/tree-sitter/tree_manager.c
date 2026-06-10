@@ -11,6 +11,7 @@
 #include "../../environnement/global_variables.h"
 #include "../../terminal/highlight.h"
 #include "../../utils/tools.h"
+#include "../../utils/logger.h"
 #include "../tree-sitter/tree_query.h"
 
 
@@ -142,7 +143,7 @@ bool loadNewParser(ParserContainer* container, char* language) {
 
   if (container->lang == NULL) {
     if (strcmp("plain", container->lang_id) != 0) {
-      fprintf(stderr, "Language : '%s' tree-sitter wasn't implemented !\n", container->lang_id);
+      notifyUser(NULL, LOG_WARNING, "Language : '%s' tree-sitter wasn't implemented !", container->lang_id);
     }
     return false;
   }
@@ -159,7 +160,7 @@ bool loadNewParser(ParserContainer* container, char* language) {
   bool load_result = getThemeFromFile(path, &container->theme_list);
   if (load_result == false) {
     ts_language_delete(container->lang);
-    fprintf(stderr, "Unable to load theme from file '%s'. You can edit path in config file.\n", path);
+    notifyUser(NULL, LOG_WARNING, "Unable to load theme from file '%s'. You can edit path in config file.", path);
     return false;
   }
 
@@ -172,7 +173,7 @@ bool loadNewParser(ParserContainer* container, char* language) {
   if (container->queries == NULL) {
     ts_language_delete(container->lang);
     destroyThemeList(&container->theme_list);
-    fprintf(stderr, "Unable to load queries from file '%s'. You can edit path in config file.\n", path);
+    notifyUser(NULL, LOG_WARNING, "Unable to load queries from file '%s'. You can edit path in config file.", path);
     printQueryLoadError(error_offset, error_type);
     return false;
   }

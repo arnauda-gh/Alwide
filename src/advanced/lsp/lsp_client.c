@@ -12,6 +12,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "../../utils/tools.h"
+#include "../../utils/logger.h"
 
 
 //////// ---------------- JSON TOOLS ---------------------
@@ -30,7 +31,7 @@ void printToStdioJSON(cJSON* json) {
 bool LSP_openLSPServer(char* name, char* command_args, char* language, LSP_Server* server) {
   char* path = whereis(name);
   if (path == NULL) {
-    fprintf(stderr, "LSP server : '%s' wasn't found ! LSP abort for language %s\n", name, language);
+    notifyUser(NULL, LOG_WARNING, "LSP server : '%s' wasn't found ! LSP abort for language %s", name, language);
     return false;
   }
   char pathMemSafe[PATH_MAX];

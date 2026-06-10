@@ -11,7 +11,8 @@ typedef enum {
     LOG_CRITICAL
 } LogLevel;
 
-void notify_user(EditorContext* ctx, LogLevel level, const char* format, ...);
-void set_notification_threshold(LogLevel level);
+void notifyUser(EditorContext* ctx, LogLevel level, const char* format, ...);
+void setNotificationThreshold(LogLevel level);
+void setActiveContext(EditorContext* ctx);
 
 #endif // ALWIDE_LOGGER_H

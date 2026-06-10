@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "../utils/logger.h"
 
 bool configExist() {
   char path[PATH_MAX];
@@ -47,11 +48,11 @@ cJSON* loadConfig() {
     touchConfig();
 
     snprintf(path, PATH_MAX, "%s/%s", home, CONFIG_PATH);
-    fprintf(stderr, "Generating default config to %s\n", path);
+    notifyUser(NULL, LOG_INFO, "Generating default config to %s", path);
 
     FILE* f = fopen(path, "w");
     if (f == NULL) {
-      fprintf(stderr, "ERROR opening config file.\n");
+      notifyUser(NULL, LOG_ERROR, "ERROR opening config file.");
       return NULL;
     }
 

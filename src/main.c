@@ -17,6 +17,7 @@
 #include "terminal/highlight.h"
 #include "terminal/key_management.h"
 #include "terminal/term_handler.h"
+#include "utils/logger.h"
 
 // Global vars.
 int color_pair = 6;
@@ -49,6 +50,7 @@ int main(int file_count, char** args) {
   /// --- Initiate EditorContext ---
   EditorContext ctx;
   initDefaultContext(file_count, &ctx);
+  setActiveContext(&ctx);
   // init context structs
   whd_init(&ctx.highlight_descriptor);
 

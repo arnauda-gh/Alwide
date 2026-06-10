@@ -538,15 +538,15 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
         waitForLspResponse(ctx, 200);
       }
       if (saveFile(*root, io_file)) {
-        notify_user(ctx, LOG_INFO, "File saved successfully.");
+        notifyUser(ctx, LOG_INFO, "File saved successfully.");
       }
       else {
-        notify_user(ctx, LOG_ERROR, "Failed to save file!");
+        notifyUser(ctx, LOG_ERROR, "Failed to save file!");
       }
       assert(io_file->status == EXIST);
       setlastFilePosition(io_file->path_abs, cursor_row(*cursor), cursor_col(*cursor), *screen_x, *screen_y);
       if (!saveCurrentStateControl(**history_root, *history_frame, io_file->path_abs)) {
-        notify_user(ctx, LOG_WARNING, "Failed to save undo history state.");
+        notifyUser(ctx, LOG_WARNING, "Failed to save undo history state.");
       }
       break;
     case H_KEY_CTRL_DELETE:

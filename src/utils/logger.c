@@ -6,6 +6,7 @@
 #include "../terminal/windows/popups/notification_popup.h"
 
 static LogLevel global_threshold = LOG_INFO;
+static EditorContext* active_context = NULL;
 
 static const char* level_to_str(LogLevel level) {
     switch (level) {
@@ -18,11 +19,15 @@ static const char* level_to_str(LogLevel level) {
     }
 }
 
-void set_notification_threshold(LogLevel level) {
+void setNotificationThreshold(LogLevel level) {
     global_threshold = level;
 }
 
-void notify_user(EditorContext* ctx, LogLevel level, const char* format, ...) {
+void setActiveContext(EditorContext* ctx) {
+    active_context = ctx;
+}
+
+void notifyUser(EditorContext* ctx, LogLevel level, const char* format, ...) {
     char message[1024];
     va_list args;
     va_start(args, format);
@@ -39,6 +44,9 @@ void notify_user(EditorContext* ctx, LogLevel level, const char* format, ...) {
     fflush(stderr);
 
     // 2. Visual notification if above threshold
+    if (ctx == NULL) {
+        ctx = active_context;
+    }
     if (level >= global_threshold && ctx != NULL) {
         gui_openNotificationPopup(ctx, message, level);
     }
