@@ -423,6 +423,7 @@ LSP_PACKET_TYPE LSP_getPacketType(cJSON* content) {
 
   // If there something wrong with server happened. Or something not handled.
   assert(false);
+  return LSP_RESPONSE;
 }
 
 
