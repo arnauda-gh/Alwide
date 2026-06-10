@@ -7,7 +7,6 @@
 #include "core/editor_destroy.h"
 #include "core/editor_init.h"
 #include "core/editor_input.h"
-#include "core/editor_lsp.h"
 #include "core/editor_render.h"
 #include "core/editor_state.h"
 #include "data-management/file_management.h"

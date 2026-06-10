@@ -1,13 +1,5 @@
 CC=clang
 
-# Check Clang version
-CLANG_VERSION := $(shell $(CC) --version | sed -n 's/.*version \([0-9]*\).*/\1/p')
-MIN_CLANG_VERSION := 18
-
-ifeq ($(shell expr $(CLANG_VERSION) \< $(MIN_CLANG_VERSION)), 1)
-$(error Clang version $(CLANG_VERSION) is too old. Please update to at least version $(MIN_CLANG_VERSION))
-endif
-
 # Default mode is debug
 MODE ?= debug
 

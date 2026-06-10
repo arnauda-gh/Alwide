@@ -144,13 +144,11 @@ git submodule update --init --recursive --depth 1 --jobs 8
 
 - `apt install make gcc libncursesw5-dev`
 
-#### Clang version 18 >=
+#### Clang
 
-Install the 18 only if you are currently under the requirement if you are above skip this step.
+Any recent version of Clang (e.g., version 11 or higher) should work.
 
-- `wget https://apt.llvm.org/llvm.sh`
-- `chmod +x llvm.sh`
-- `sudo ./llvm.sh 18` (check result you may be asked to add some dependencies).
+Install Clang if it's not already available:
 
 #### Install tree-sitter api.h
 

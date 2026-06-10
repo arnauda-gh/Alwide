@@ -9,7 +9,11 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
@@ -32,6 +36,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libncursesw5-dev clang
+
 # Dependencies
     - name: Install tree-sitter CLI
       run: |
@@ -46,7 +55,7 @@ jobs:
 
 # Check project status
     - name: Compile project - building - parsers, cJSON, al.
-      run: make -j$(nproc)
+      run: make -j2
 
     - name: Executing installation script
       run: |

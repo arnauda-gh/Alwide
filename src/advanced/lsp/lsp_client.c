@@ -41,7 +41,7 @@ bool LSP_openLSPServer(char* name, char* command_args, char* language, LSP_Serve
 
   free(path);
 
-  strlcpy(server->language, language, 100);
+  snprintf(server->language, 100, "%s", language);
 
   server->request_id = 0;
   server->response_contexts = NULL;
@@ -431,7 +431,7 @@ void LSP_addResponseContext(LSP_Server* server, LSP_PacketID id, char* method, c
   new_context->next = server->response_contexts;
   new_context->id = id;
   new_context->method = method;
-  strlcpy(new_context->file_name, file_name, PATH_MAX);
+  snprintf(new_context->file_name, PATH_MAX, "%s", file_name);
   new_context->payload = payload;
 
   server->response_contexts = new_context;
@@ -933,10 +933,10 @@ LSP_CodeAction LSP_getCodeActionFromJSON(cJSON* json) {
   cJSON* command_item = cJSON_GetObjectItem(json, "command");
 
   if (cJSON_IsString(title_item)) {
-    strlcpy(code_action.title, title_item->valuestring, 200);
+    snprintf(code_action.title, 200, "%s", title_item->valuestring);
   }
   if (cJSON_IsString(kind_item)) {
-    strlcpy(code_action.kind, kind_item->valuestring, 50);
+    snprintf(code_action.kind, 50, "%s", kind_item->valuestring);
   }
   code_action.isPreferred = cJSON_IsTrue(isPreferred_item);
 
@@ -949,7 +949,7 @@ LSP_CodeAction LSP_getCodeActionFromJSON(cJSON* json) {
     cJSON* cmd_str = cJSON_GetObjectItem(command_item, "command");
     cJSON* cmd_args = cJSON_GetObjectItem(command_item, "arguments");
     if (cmd_str && cJSON_IsString(cmd_str)) {
-      strlcpy(code_action.command.command, cmd_str->valuestring, 100);
+      snprintf(code_action.command.command, 100, "%s", cmd_str->valuestring);
       if (cmd_args) {
         code_action.command.arguments = cJSON_Duplicate(cmd_args, true);
       }
@@ -958,7 +958,7 @@ LSP_CodeAction LSP_getCodeActionFromJSON(cJSON* json) {
       if (code_action.title[0] == '\0') {
         cJSON* cmd_title = cJSON_GetObjectItem(command_item, "title");
         if (cJSON_IsString(cmd_title)) {
-          strlcpy(code_action.title, cmd_title->valuestring, 200);
+          snprintf(code_action.title, 200, "%s", cmd_title->valuestring);
         }
       }
     }
@@ -1182,7 +1182,7 @@ LSP_Diagnostic LSP_getDiagnosticFromJSON(cJSON* json) {
   cJSON* code = cJSON_GetObjectItem(json, "code");
   if (code) {
     if (cJSON_GetStringValue(code)) {
-      strlcpy(diagnostic.code, cJSON_GetStringValue(code), MESSAGE_LENGTH);
+      snprintf(diagnostic.code, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(code));
     }
   }
 
@@ -1194,14 +1194,14 @@ LSP_Diagnostic LSP_getDiagnosticFromJSON(cJSON* json) {
   cJSON* message = cJSON_GetObjectItem(json, "message");
   if (message) {
     if (cJSON_GetStringValue(message)) {
-      strlcpy(diagnostic.message, cJSON_GetStringValue(message), MESSAGE_LENGTH);
+      snprintf(diagnostic.message, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(message));
     }
   }
 
   cJSON* codeDescription = cJSON_GetObjectItem(json, "codeDescription");
   if (codeDescription) {
     if (cJSON_GetStringValue(codeDescription)) {
-      strlcpy(diagnostic.codeDescription, cJSON_GetStringValue(codeDescription), MESSAGE_LENGTH);
+      snprintf(diagnostic.codeDescription, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(codeDescription));
     }
   }
 
@@ -1253,23 +1253,23 @@ void LSP_getCompletionItemFromJSON(cJSON* json, LSP_CompletionItem* item) {
 
   // copy the label
   assert(cJSON_GetObjectItem(json, "label") != NULL);
-  strlcpy(item->label, cJSON_GetStringValue(cJSON_GetObjectItem(json, "label")), METHOD_MAX_LENGTH);
+  snprintf(item->label, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(json, "label")));
 
   // fill if present labelDetails
   cJSON* tmp_item;
   if ((tmp_item = cJSON_GetObjectItem(json, "labelDetails")) != NULL) {
     cJSON* tmp_item_2;
     if ((tmp_item_2 = cJSON_GetObjectItem(tmp_item, "detail")) != NULL) {
-      strlcpy(item->detail, cJSON_GetStringValue(tmp_item_2), METHOD_MAX_LENGTH);
+      snprintf(item->detail, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(tmp_item_2));
     }
     if ((tmp_item_2 = cJSON_GetObjectItem(tmp_item, "description")) != NULL) {
-      strlcpy(item->description, cJSON_GetStringValue(tmp_item_2), METHOD_MAX_LENGTH);
+      snprintf(item->description, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(tmp_item_2));
     }
   }
 
   // fill if present detail
   if ((tmp_item = cJSON_GetObjectItem(tmp_item, "detail")) != NULL) {
-    strlcpy(item->detail, cJSON_GetStringValue(tmp_item), METHOD_MAX_LENGTH);
+    snprintf(item->detail, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(tmp_item));
   }
 
   // fill if present kind
@@ -1280,17 +1280,17 @@ void LSP_getCompletionItemFromJSON(cJSON* json, LSP_CompletionItem* item) {
   // fill if present the documentation
   if ((tmp_item = cJSON_GetObjectItem(json, "documentation"))) {
     if (cJSON_IsString(tmp_item)) {
-      strlcpy(item->documentation, cJSON_GetStringValue(tmp_item), MESSAGE_LENGTH);
+      snprintf(item->documentation, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(tmp_item));
     }
     else {
       item->documentationType = cJSON_GetNumberValue(cJSON_GetObjectItem(tmp_item, "kind"));
-      strlcpy(item->documentation, cJSON_GetStringValue(cJSON_GetObjectItem(tmp_item, "value")), MESSAGE_LENGTH);
+      snprintf(item->documentation, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(tmp_item, "value")));
     }
   }
 
   // fill if present sortText
   if ((tmp_item = cJSON_GetObjectItem(json, "sortText"))) {
-    strlcpy(item->sortText, cJSON_GetStringValue(tmp_item), METHOD_MAX_LENGTH);
+    snprintf(item->sortText, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(tmp_item));
   }
   else {
     strncpy(item->sortText, item->label, METHOD_MAX_LENGTH);
@@ -1298,7 +1298,7 @@ void LSP_getCompletionItemFromJSON(cJSON* json, LSP_CompletionItem* item) {
 
   // fill if present filterText
   if ((tmp_item = cJSON_GetObjectItem(json, "filterText"))) {
-    strlcpy(item->filterText, cJSON_GetStringValue(tmp_item), METHOD_MAX_LENGTH);
+    snprintf(item->filterText, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(tmp_item));
   }
   else {
     strncpy(item->filterText, item->label, METHOD_MAX_LENGTH);
@@ -1306,7 +1306,7 @@ void LSP_getCompletionItemFromJSON(cJSON* json, LSP_CompletionItem* item) {
 
   // fill if present insertText
   if ((tmp_item = cJSON_GetObjectItem(json, "insertText"))) {
-    strlcpy(item->insertText, cJSON_GetStringValue(tmp_item), METHOD_MAX_LENGTH);
+    snprintf(item->insertText, METHOD_MAX_LENGTH, "%s", cJSON_GetStringValue(tmp_item));
   }
   else {
     strncpy(item->insertText, item->label, METHOD_MAX_LENGTH);
@@ -1401,7 +1401,7 @@ void LSP_getMarkedStringFromJSON(cJSON* json, LSP_MarkedString* item) {
   item->documentationType = dt_PLAIN_TEXT;
 
   if (cJSON_IsString(json)) {
-    strlcpy(item->value, cJSON_GetStringValue(json), MESSAGE_LENGTH);
+    snprintf(item->value, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(json));
   }
   else if (cJSON_IsObject(json)) {
     cJSON* kind = cJSON_GetObjectItem(json, "kind");
@@ -1411,7 +1411,7 @@ void LSP_getMarkedStringFromJSON(cJSON* json, LSP_MarkedString* item) {
       if (strcmp(cJSON_GetStringValue(kind), "markdown") == 0) {
         item->documentationType = dt_MARKDOWN;
       }
-      strlcpy(item->value, cJSON_GetStringValue(value), MESSAGE_LENGTH);
+      snprintf(item->value, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(value));
     }
     else if (value) {
       // MarkedString with { language, value }
@@ -1422,7 +1422,7 @@ void LSP_getMarkedStringFromJSON(cJSON* json, LSP_MarkedString* item) {
        *  ${value}
        *  ```
        */
-      strlcpy(item->value, cJSON_GetStringValue(value), MESSAGE_LENGTH);
+      snprintf(item->value, MESSAGE_LENGTH, "%s", cJSON_GetStringValue(value));
     }
   }
 }

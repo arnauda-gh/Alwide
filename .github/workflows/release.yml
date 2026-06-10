@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-20.04
     permissions:
       contents: write
 
@@ -24,9 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libncursesw5-dev clang-18
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
-          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang-18 100
+          sudo apt-get install -y libncursesw5-dev clang
 
       - name: Install tree-sitter CLI
         run: |
