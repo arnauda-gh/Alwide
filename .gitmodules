@@ -1,15 +1,19 @@
 [submodule "lib/tree-sitter-html"]
 	path = lib/tree-sitter-html
 	url = https://github.com/tree-sitter/tree-sitter-html.git
+	ignore = untracked
 [submodule "lib/tree-sitter"]
 	path = lib/tree-sitter
 	url = https://github.com/tree-sitter/tree-sitter.git
+	ignore = untracked
 [submodule "lib/tree-sitter-c"]
 	path = lib/tree-sitter-c
 	url = https://github.com/tree-sitter/tree-sitter-c.git
+	ignore = untracked
 [submodule "lib/tree-sitter-asm"]
 	path = lib/tree-sitter-asm
 	url = https://github.com/RubixDev/tree-sitter-asm.git
+	ignore = untracked
 [submodule "lib/tree-sitter-cpp"]
 	path = lib/tree-sitter-cpp
 	url = https://github.com/tree-sitter/tree-sitter-cpp.git
@@ -17,27 +21,35 @@
 [submodule "lib/tree-sitter-dart"]
 	path = lib/tree-sitter-dart
 	url = https://github.com/UserNobody14/tree-sitter-dart.git
+	ignore = untracked
 [submodule "lib/tree-sitter-java"]
 	path = lib/tree-sitter-java
 	url = https://github.com/tree-sitter/tree-sitter-java.git
+	ignore = untracked
 [submodule "lib/tree-sitter-lua"]
 	path = lib/tree-sitter-lua
 	url = https://github.com/tree-sitter-grammars/tree-sitter-lua.git
+	ignore = untracked
 [submodule "lib/tree-sitter-python"]
 	path = lib/tree-sitter-python
 	url = https://github.com/tree-sitter/tree-sitter-python.git
+	ignore = untracked
 [submodule "lib/tree-sitter-bash"]
 	path = lib/tree-sitter-bash
 	url = https://github.com/tree-sitter/tree-sitter-bash.git
+	ignore = untracked
 [submodule "lib/tree-sitter-c-sharp"]
 	path = lib/tree-sitter-c-sharp
 	url = https://github.com/tree-sitter/tree-sitter-c-sharp.git
+	ignore = untracked
 [submodule "lib/tree-sitter-go"]
 	path = lib/tree-sitter-go
 	url = https://github.com/tree-sitter/tree-sitter-go.git
+	ignore = untracked
 [submodule "lib/tree-sitter-javascript"]
 	path = lib/tree-sitter-javascript
 	url = https://github.com/tree-sitter/tree-sitter-javascript.git
+	ignore = untracked
 [submodule "lib/tree-sitter-make"]
 	path = lib/tree-sitter-make
 	url = https://github.com/arnauda-gh/tree-sitter-make.git
@@ -45,12 +57,15 @@
 [submodule "lib/tree-sitter-query"]
 	path = lib/tree-sitter-query
 	url = https://github.com/tree-sitter-grammars/tree-sitter-query.git
+	ignore = untracked
 [submodule "lib/tree-sitter-css"]
 	path = lib/tree-sitter-css
 	url = https://github.com/tree-sitter/tree-sitter-css.git
+	ignore = untracked
 [submodule "lib/tree-sitter-json"]
 	path = lib/tree-sitter-json
 	url = https://github.com/tree-sitter/tree-sitter-json.git
+	ignore = untracked
 [submodule "lib/tree-sitter-markdown"]
 	path = lib/tree-sitter-markdown
 	url = https://github.com/tree-sitter-grammars/tree-sitter-markdown.git
@@ -62,6 +77,7 @@
 [submodule "lib/cJSON"]
 	path = lib/cJSON
 	url = https://github.com/DaveGamble/cJSON.git
+	ignore = untracked
 [submodule "lib/tree-sitter-latex"]
 	path = lib/tree-sitter-latex
 	url = https://github.com/latex-lsp/tree-sitter-latex

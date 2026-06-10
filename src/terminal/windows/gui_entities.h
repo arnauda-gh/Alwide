@@ -25,6 +25,8 @@ struct gui_TPW {
 
   void* payload; // Custom data specific to this popup instance
 
+  long long expiry_time; // Time in ms when the popup should be destroyed (0 for permanent)
+
   gui_TPW* next; // Next popup in the linked list
 };
 
@@ -83,7 +85,19 @@ typedef struct {
 } gui_EDW;
 
 
-typedef struct {
+typedef struct gui_Context gui_Context;
+typedef struct Notification Notification;
+
+struct Notification {
+  gui_TPW* tpw;
+  char message[256];
+  int level;
+  int index; // Position in stack
+  gui_Context* gui_context;
+  Notification* next;
+};
+
+struct gui_Context {
   // Init GUI vars
   gui_EDW edw_context; // Editor Window Context
   gui_OFW ofw_context; // Opened File Context
@@ -95,7 +109,11 @@ typedef struct {
   // Toplevel popup list head
   gui_TPW* toplevel_popups;
   bool refresh_tpw;
-} gui_Context;
+
+  // Notifications
+  Notification* active_notifications;
+  int notification_count;
+};
 
 
 #endif // WISHWIM_GUI_ENTITIES_H

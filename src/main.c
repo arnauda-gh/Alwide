@@ -3,21 +3,20 @@
 #include "advanced/tree-sitter/tree_manager.h"
 #include "config/config.h"
 #include "config/language_feature.h"
-#include "data-management/file_management.h"
-#include "environnement/global_variables.h"
-#include "io-management/workspace_settings.h"
-#include "terminal/highlight.h"
-#include "terminal/term_handler.h"
-
 #include "core/editor_context.h"
 #include "core/editor_destroy.h"
 #include "core/editor_init.h"
 #include "core/editor_input.h"
-#include "core/editor_lsp.h"
 #include "core/editor_render.h"
 #include "core/editor_state.h"
+#include "data-management/file_management.h"
+#include "environnement/global_variables.h"
 #include "environnement/setup.h"
+#include "io-management/workspace_settings.h"
+#include "terminal/highlight.h"
 #include "terminal/key_management.h"
+#include "terminal/term_handler.h"
+#include "utils/logger.h"
 
 // Global vars.
 int color_pair = 6;
@@ -50,6 +49,7 @@ int main(int file_count, char** args) {
   /// --- Initiate EditorContext ---
   EditorContext ctx;
   initDefaultContext(file_count, &ctx);
+  setActiveContext(&ctx);
   // init context structs
   whd_init(&ctx.highlight_descriptor);
 
@@ -82,10 +82,10 @@ int main(int file_count, char** args) {
 
     //// ---- BEGIN background / delayed operations BLOCK ----
 
-    // handle lsp servers
-    handleLspServers(&ctx, &key);
+    // run background tasks (notifications expiry, etc.)
+    runBackgroundProcess(&ctx, &key);
 
-    // if lsp ask to refresh local_vars we have to execute post processing
+    // if a background process ask to refresh local_vars we have to execute post processing
     if (ctx.refresh_local_vars) {
       // !! WARNING !!: careful we may drop an input doing this jump. We consider this drop non important.
       continue;

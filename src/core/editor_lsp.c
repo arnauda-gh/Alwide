@@ -17,7 +17,7 @@ ModuleContext buildModuleContext(EditorContext* ctx) {
   payload.files_state = filesStateOf(&ctx->files, &ctx->file_count, &ctx->current_file_index, &ctx->refresh_local_vars);
   payload.view_port = viewPortOf(&ctx->gui_context, &fc->screen_x, &fc->screen_y);
   payload.cursor = &fc->cursor;
-  payload.payload_state_change = ctx->payload_state_change;
+  payload.payload_state_change = &ctx->payload_state_change;
   return payload;
 }
 
@@ -36,12 +36,26 @@ void handleLspServers(EditorContext* ctx, int* key) {
   }
 }
 
+static bool hasPendingFormatting() {
+  LSPServerLinkedList_Cell* cell = lsp_servers.head;
+  while (cell != NULL) {
+    if (LSP_hasPendingRequest(&cell->lsp_server, "textDocument/formatting")) {
+      return true;
+    }
+    cell = cell->next;
+  }
+  return false;
+}
+
 void waitForLspResponse(EditorContext* ctx, int timeout_ms) {
   time_val start = timeInMilliseconds();
   while (diff2Time(timeInMilliseconds(), start) < timeout_ms) {
     int key = ERR;
     handleLspServers(ctx, &key);
-    usleep(10000); // 10ms
+    if (!hasPendingFormatting()) {
+      break;
+    }
+    usleep(5000); // 5ms
   }
 }
 

@@ -1,8 +1,22 @@
 #include "editor_state.h"
+#include <stdio.h>
+
 #include "../advanced/tree-sitter/tree_manager.h"
 #include "../data-management/state_control.h"
 #include "../terminal/term_handler.h"
 #include "../terminal/windows/edw.h"
+#include "../terminal/windows/popups/notification_popup.h"
+#include "../terminal/windows/tpw.h"
+#include "../utils/tools.h"
+#include "editor_lsp.h"
+
+void runBackgroundProcess(EditorContext* ctx, int* key) {
+  // handle lsp servers
+  handleLspServers(ctx, key);
+
+  // Handle auto-destruction of temporary popups
+  gui_checkNotificationsExpiry(&ctx->gui_context);
+}
 
 void runPostProcessing(EditorContext* ctx) {
   FileContainer* fc = &ctx->files[ctx->current_file_index];

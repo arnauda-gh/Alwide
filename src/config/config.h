@@ -4,9 +4,9 @@
 
 #include "../../lib/cJSON/cJSON.h"
 
-#define CONFIG_PATH      ".config/alwide/config"
-#define CONFIG_FOLDER    ".config/alwide/"
-#define CONFIG_FILENAME  "config"
+#define CONFIG_PATH     ".config/alwide/config"
+#define CONFIG_FOLDER   ".config/alwide/"
+#define CONFIG_FILENAME "config"
 
 #define DEFAULT_CONFIG "{\n    \"default_path\": \"~/.config/alwide\"\n}\n"
 

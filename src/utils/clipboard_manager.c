@@ -126,63 +126,71 @@ bool saveToClipBoard(Cursor begin, Cursor end) {
   return true;
 }
 
-Cursor loadFromClipBoard(FileContainer* fc) {
-  Cursor cursor = fc->cursor;
+static FILE* openClipboardReader(pid_t* out_child_pid) {
   updateWlPasteVars();
   updateXClipVars();
 
-  bool child_is_dead = true;
-  int child_pid = 0;
   int pipe_read[2];
-  pipe(pipe_read);
+  if (pipe(pipe_read) == -1) {
+    *out_child_pid = 0;
+    return NULL;
+  }
 
-  FILE* f;
+  FILE* f = NULL;
+  pid_t child_pid = 0;
+
   // prefer using wl_paste instead of xclip
   if (wl_paste == true) {
-    child_is_dead = false;
     child_pid = fork();
     if (child_pid == 0) {
       dup2(pipe_read[1], STDOUT_FILENO);
+      close(pipe_read[0]);
+      close(pipe_read[1]);
 
       prctl(PR_SET_PDEATHSIG, SIGTERM);
 
       execl(wl_paste_path, wl_paste_path, "-n", NULL);
-
-      close(pipe_read[0]);
-      close(pipe_read[1]);
       exit(1);
     }
+    close(pipe_read[1]);
+    f = fdopen(pipe_read[0], "r");
+  }
+  else if (xclip == true) {
+    child_pid = fork();
+    if (child_pid == 0) {
+      dup2(pipe_read[1], STDOUT_FILENO);
+      close(pipe_read[0]);
+      close(pipe_read[1]);
 
+      prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+      execl(xclip_path, xclip_path, "-selection", "clipboard", "-out", NULL);
+      exit(1);
+    }
+    close(pipe_read[1]);
     f = fdopen(pipe_read[0], "r");
   }
   else {
-    if (xclip == true) {
-      child_is_dead = false;
-      child_pid = fork();
-      if (child_pid == 0) {
-        dup2(pipe_read[1], STDOUT_FILENO);
-
-        prctl(PR_SET_PDEATHSIG, SIGTERM);
-
-        execl(xclip_path, xclip_path, "-selection", "clipboard", "-out", NULL);
-
-        close(pipe_read[0]);
-        close(pipe_read[1]);
-        exit(1);
-      }
-      f = fdopen(pipe_read[0], "r");
-    }
-    else {
-      // If xclip and wl_paste are not found just using last_clip file.
-      f = fopen("/tmp/al/clipboard/last_clip", "r");
-    }
+    close(pipe_read[0]);
+    close(pipe_read[1]);
+    // If xclip and wl_paste are not found just using last_clip file.
+    f = fopen("/tmp/al/clipboard/last_clip", "r");
+    child_pid = 0;
   }
 
+  *out_child_pid = child_pid;
+  return f;
+}
+
+Cursor loadFromClipBoard(FileContainer* fc) {
+  Cursor cursor = fc->cursor;
+  pid_t child_pid = 0;
+  FILE* f = openClipboardReader(&child_pid);
   if (f == NULL) {
     return cursor;
   }
 
-  int are_byte_remaining;
+  bool child_is_dead = (child_pid <= 0);
   int child_status;
   int fd = fileno(f);
   if (fd == -1) {
@@ -194,6 +202,7 @@ Cursor loadFromClipBoard(FileContainer* fc) {
   fds[0].events = POLLIN;
 
   char c;
+  int are_byte_remaining;
   // read while pipe is filled and while child is not dead.
   while ((are_byte_remaining = poll(fds, 1, 0)) != 0 || child_is_dead == false) {
     if (are_byte_remaining == -1) {
@@ -203,7 +212,6 @@ Cursor loadFromClipBoard(FileContainer* fc) {
 
     // Wait for new data or for child die
     if (are_byte_remaining == false) {
-
       if (child_is_dead == false) {
         // check the status of the child.
         pid_t terminated_pid = waitpid(child_pid, &child_status, WNOHANG);
@@ -218,31 +226,21 @@ Cursor loadFromClipBoard(FileContainer* fc) {
           child_is_dead = true;
         }
       }
-
       continue;
     }
 
     int size = read(fd, &c, 1);
 
     // support EOF for classic files.
-    if (size == 0 && are_byte_remaining == true || c == EOF) {
+    if ((size == 0 && are_byte_remaining == true) || c == EOF) {
       break;
     }
 
-#ifdef LOGS
-    // assert(checkFileIntegrity(root) == true);
-#endif
     if (iscntrl(c)) {
       if (c == '\n') {
-#ifdef LOGS
-        // printf("Enter\r\n");
-#endif
         cursor = insertNewLineInLineC(cursor);
       }
       else if (c == 9) {
-#ifdef LOGS
-        // printf("Tab\r\n");
-#endif
         Char_U8 ch;
         if (!LF_tab_use_space(fc->feature)) {
           ch.t[0] = '\t';
@@ -255,26 +253,93 @@ Cursor loadFromClipBoard(FileContainer* fc) {
           }
         }
       }
-      else {
-#ifdef LOGS
-        // printf("Unsupported Char loaded from file : '%d'.\r\n", c);
-#endif
-        // exit(0);
-      }
     }
     else {
       Char_U8 ch = readChar_U8FromFileWithFirstUsingFd(fd, c);
-#ifdef LOGS
-      printChar_U8(stdout, ch);
-      // printf("\r\n");
-#endif
       cursor = insertCharInLineC(cursor, ch);
     }
   }
 
   fclose(f);
-  close(pipe_read[0]);
-  close(pipe_read[1]);
+  if (child_pid > 0 && !child_is_dead) {
+    waitpid(child_pid, &child_status, 0);
+  }
 
   return cursor;
+}
+
+int getClipboardText(char* buf, int max_len) {
+  if (max_len <= 0 || buf == NULL) {
+    return 0;
+  }
+
+  pid_t child_pid = 0;
+  FILE* f = openClipboardReader(&child_pid);
+  if (f == NULL) {
+    return 0;
+  }
+
+  bool child_is_dead = (child_pid <= 0);
+  int child_status;
+  int fd = fileno(f);
+  if (fd == -1) {
+    perror("fileno");
+  }
+
+  struct pollfd fds[1];
+  fds[0].fd = fd;
+  fds[0].events = POLLIN;
+
+  char c;
+  int len = 0;
+  int are_byte_remaining;
+  // read while pipe is filled and while child is not dead.
+  while (len < max_len - 1) {
+    are_byte_remaining = poll(fds, 1, 0);
+    if (are_byte_remaining == -1) {
+      fprintf(stderr, "read error in clipboard read\n");
+      break;
+    }
+
+    // Wait for new data or for child to die
+    if (are_byte_remaining == 0) {
+      if (child_is_dead == false && child_pid > 0) {
+        // check the status of the child.
+        pid_t terminated_pid = waitpid(child_pid, &child_status, WNOHANG);
+
+        if (terminated_pid == -1) {
+          fprintf(stderr, "child management in clipboard failed.\n");
+          perror("waitpid");
+          break;
+        }
+        // child is dead
+        if (terminated_pid == child_pid) {
+          child_is_dead = true;
+        }
+      }
+      else if (child_is_dead) {
+        // No more bytes and child is dead
+        break;
+      }
+      continue;
+    }
+
+    int size = read(fd, &c, 1);
+
+    // support EOF for classic files.
+    if (size <= 0 || c == EOF) {
+      break;
+    }
+
+    buf[len++] = c;
+  }
+
+  buf[len] = '\0';
+
+  fclose(f);
+  if (child_pid > 0 && !child_is_dead) {
+    waitpid(child_pid, &child_status, 0);
+  }
+
+  return len;
 }

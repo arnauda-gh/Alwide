@@ -4,5 +4,6 @@
 #include "editor_context.h"
 
 void runPostProcessing(EditorContext* ctx);
+void runBackgroundProcess(EditorContext* ctx, int * key);
 
 #endif

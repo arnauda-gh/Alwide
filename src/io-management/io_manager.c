@@ -79,10 +79,13 @@ bool loadFile(Cursor cursor, char* fileName, LF_Tabulation* tab) {
   return true;
 }
 
-void saveFile(FileNode* root, IO_FileID* file) {
+bool saveFile(FileNode* root, IO_FileID* file) {
   if (file->status == DONT_EXIST) {
     // create the file.
     FILE* tmp_file = fopen(file->path_args, "w");
+    if (!tmp_file) {
+      return false;
+    }
     fclose(tmp_file);
     char* realpath_resulst = realpath(file->path_args, file->path_abs);
     assert(realpath_resulst != NULL);
@@ -91,6 +94,9 @@ void saveFile(FileNode* root, IO_FileID* file) {
 
   assert(file->status == EXIST);
   FILE* f = fopen(file->path_abs, "w");
+  if (!f) {
+    return false;
+  }
   bool first = true;
   while (root != NULL) {
     for (int i = 0; i < root->element_number; i++) {
@@ -113,6 +119,7 @@ void saveFile(FileNode* root, IO_FileID* file) {
 
 
   fclose(f);
+  return true;
 }
 
 

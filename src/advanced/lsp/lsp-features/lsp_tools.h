@@ -8,7 +8,7 @@
 #include "../lsp_client.h"
 
 void applyTextEdit(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* text_edit, History** history_p,
-                   PayloadStateChange payload_state_change, LF_Tabulation* tab);
+                   PayloadStateChange *payload_state_change, LF_Tabulation* tab);
 
 
 /**
@@ -17,14 +17,14 @@ void applyTextEdit(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* text_edit, His
  * The cursor position is tracked and updated based on the shifts.
  */
 void applyTextEditsArray(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* edits, int edits_size, History** history_p,
-                         PayloadStateChange payload_state_change, LF_Tabulation* tab);
+                         PayloadStateChange *payload_state_change, LF_Tabulation* tab);
 
 /**
  * Applies a full WorkspaceEdit.
  * Currently primarily supports changes to the active file (fc).
  */
 void applyWorkspaceEdit(FileContainer* fc, Cursor* cursor, LSP_WorkspaceEdit* ws_edit,
-                        PayloadStateChange payload_state_change);
+                        PayloadStateChange* payload_state_change);
 
 int compareTextEdit(const void* e1_p, const void* e2_p);
 

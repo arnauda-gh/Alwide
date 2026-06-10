@@ -241,13 +241,23 @@ int normalize_legacy(int c) {
             /* Search for a digit at the end of the name (e.g., kUP5) */
             for (int i = len - 1; i >= 0 && isdigit((unsigned char)name[i]); i--) {
               int val = (name[i] - '0') - 1;
-              if (val < 0) continue; 
+              if (val < 0) {
+                continue;
+              }
 
               int unified_mods = 0;
-              if (val & 1) unified_mods |= K_MOD_SHIFT;
-              if (val & 2) unified_mods |= K_MOD_ALT;
-              if (val & 4) unified_mods |= K_MOD_CTRL;
-              if (val & 8) unified_mods |= K_MOD_SUPER;
+              if (val & 1) {
+                unified_mods |= K_MOD_SHIFT;
+              }
+              if (val & 2) {
+                unified_mods |= K_MOD_ALT;
+              }
+              if (val & 4) {
+                unified_mods |= K_MOD_CTRL;
+              }
+              if (val & 8) {
+                unified_mods |= K_MOD_SUPER;
+              }
               return K_SPECIAL(unified_mods, target_key);
             }
             return K_SPECIAL(0, target_key);
@@ -264,12 +274,9 @@ void logInput(int key) {
     return;
   }
 
-  FILE* f = fopen(".logs.txt", "a");
-  if (!f) {
-    return;
-  }
+  FILE* f = stderr;
 
-  fprintf(f, "[INPUT] Key: 0x%08X | ", key);
+  fprintf(stderr, "[INPUT] Key: 0x%08X | ", key);
 
   /* Modifiers */
   if (K_HAS_CTRL(key)) {
@@ -317,5 +324,4 @@ void logInput(int key) {
   }
 
   fprintf(f, "\n");
-  fclose(f);
 }

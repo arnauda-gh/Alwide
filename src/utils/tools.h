@@ -8,6 +8,7 @@
 
 #include "../advanced/lsp/lsp_client.h"
 #include "../io-management/io_manager.h"
+#include "../terminal/graphics_tools.h"
 
 #define URI_MAX (PATH_MAX * 3 + 8)
 
@@ -33,7 +34,6 @@ int numberOfDigitOfNumber(int n);
 
 unsigned long long hashFileName(char* fileName);
 
-void printToNcursesNCharFromString(WINDOW* w, char* str, int n);
 
 char* whereis(char* prog);
 
@@ -47,7 +47,6 @@ char* loadFullFile(const char* path, long* length);
 
 int mkdir_p(const char* path, mode_t mode);
 
-void countStringFrame(char* ch, int length, int* current_row, int* current_column, int* screen_max_width, int tab_size);
 
 int utf8_get_byte_offset(Char_U8* ch, int element_number, int character_column);
 

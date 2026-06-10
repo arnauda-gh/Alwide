@@ -6,7 +6,7 @@
 #include "../../../environnement/global_variables.h"
 
 void applyTextEdit(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* text_edit, History** history_p,
-                   PayloadStateChange payload_state_change, LF_Tabulation* tab) {
+                   PayloadStateChange *payload_state_change, LF_Tabulation* tab) {
   // As a text edit can represent a "replacement" we have to handle this deleting old text and inserting new text after.
   // Delete part
   *cursor = LSP_tryToReachCursorForLSPPosition(lsp, *cursor, text_edit->range.pos1);
@@ -17,7 +17,7 @@ void applyTextEdit(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* text_edit, His
 }
 
 void applyTextEditsArray(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* edits, int edits_size, History** history_p,
-                         PayloadStateChange payload_state_change, LF_Tabulation* tab) {
+                         PayloadStateChange *payload_state_change, LF_Tabulation* tab) {
   if (edits_size <= 0) {
     return;
   }
@@ -57,7 +57,7 @@ void applyTextEditsArray(LSP_Server* lsp, Cursor* cursor, LSP_TextEdit* edits, i
 }
 
 void applyWorkspaceEdit(FileContainer* fc, Cursor* cursor, LSP_WorkspaceEdit* ws_edit,
-                        PayloadStateChange payload_state_change) {
+                        PayloadStateChange *payload_state_change) {
   if (!ws_edit || ws_edit->document_changes_count <= 0) {
     return;
   }

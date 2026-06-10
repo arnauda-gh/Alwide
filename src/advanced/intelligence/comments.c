@@ -100,7 +100,7 @@ void ilj_toggleComments(FileContainer* fc, History** history_frame, PayloadState
       if (isLineCommented(line, prefix)) {
         Cursor delete_start = tryToReachAbsPosition(it, r, indent);
         Cursor delete_end = tryToReachAbsPosition(it, r, indent + prefix_len);
-        deleteSelectionWithState(history_frame, &delete_start, &delete_end, *payload_state_change);
+        deleteSelectionWithState(history_frame, &delete_start, &delete_end, payload_state_change);
 
         // Adjust column position if cursor or selection was on this line
         if (r == cursor_row) {
@@ -133,7 +133,7 @@ void ilj_toggleComments(FileContainer* fc, History** history_frame, PayloadState
 
       if (!empty || start_row == end_row) {
         Cursor insert_pos = tryToReachAbsPosition(it, r, indent);
-        insert_pos = insertCharArrayAtCursorWithState(history_frame, insert_pos, (char*)prefix, *payload_state_change,
+        insert_pos = insertCharArrayAtCursorWithState(history_frame, insert_pos, (char*)prefix, payload_state_change,
                                                       LF_tab(fc->feature));
 
         // Adjust column position if cursor or selection was on this line
