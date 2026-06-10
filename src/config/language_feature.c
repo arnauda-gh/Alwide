@@ -8,6 +8,7 @@
 
 #include "../environnement/global_variables.h"
 #include "../utils/tools.h"
+#include "../utils/logger.h"
 #include "config.h"
 
 LF_LanguageFeature default_feature = {
@@ -82,7 +83,7 @@ void LF_loadLanguageFeatures() {
   long length;
   char* content = loadFullFile(path, &length);
   if (!content) {
-    fprintf(stderr, "Failed to load languages-features.json from %s.\n", path);
+    notifyUser(NULL, LOG_ERROR, "Failed to load languages-features.json from %s.", path);
     return;
   }
 

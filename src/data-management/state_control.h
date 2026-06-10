@@ -75,7 +75,7 @@ void destroyAction(Action action);
 
 void destroyEndOfHistory(History* history);
 
-void saveCurrentStateControl(History root, History* current_state, char* fileName);
+bool saveCurrentStateControl(History root, History* current_state, char* fileName);
 
 void loadCurrentStateControl(History* root, History** current_state, IO_FileID io_file);
 

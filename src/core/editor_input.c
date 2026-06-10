@@ -21,9 +21,11 @@
 #include "../terminal/kitty_protocol.h"
 #include "../terminal/windows/few.h"
 #include "../terminal/windows/ofw.h"
+#include "../terminal/windows/popups/notification_popup.h"
 #include "../terminal/windows/popups/search_popup.h"
 #include "../terminal/windows/pow.h"
 #include "../utils/clipboard_manager.h"
+#include "../utils/logger.h"
 #include "../utils/tools.h"
 #include "editor_lsp.h"
 
@@ -87,6 +89,7 @@ bool runInternalLogic(EditorContext* ctx, int key, EventLoopAction* out_action) 
     case H_KEY_RESIZE:
       gui_resizeOFW(&ctx->gui_context);
       gui_resizeEDW(&ctx->gui_context, -1);
+      gui_updateNotificationsPosition(&ctx->gui_context);
       gui_updateGUI(&ctx->gui_context);
       *out_action = EVENT_CONTINUE;
       return true;
@@ -534,10 +537,17 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
         askFormatting(fc);
         waitForLspResponse(ctx, 200);
       }
-      saveFile(*root, io_file);
+      if (saveFile(*root, io_file)) {
+        notifyUser(ctx, LOG_INFO, "File saved successfully.");
+      }
+      else {
+        notifyUser(ctx, LOG_ERROR, "Failed to save file!");
+      }
       assert(io_file->status == EXIST);
       setlastFilePosition(io_file->path_abs, cursor_row(*cursor), cursor_col(*cursor), *screen_x, *screen_y);
-      saveCurrentStateControl(**history_root, *history_frame, io_file->path_abs);
+      if (!saveCurrentStateControl(**history_root, *history_frame, io_file->path_abs)) {
+        notifyUser(ctx, LOG_WARNING, "Failed to save undo history state.");
+      }
       break;
     case H_KEY_CTRL_DELETE:
     case K_SPECIAL(K_MOD_CTRL, 'h'):

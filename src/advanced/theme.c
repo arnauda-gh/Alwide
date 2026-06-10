@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../utils/logger.h"
 
 
 bool getThemeFromFile(char* file_name, HighlightThemeList* list) {
@@ -10,7 +11,7 @@ bool getThemeFromFile(char* file_name, HighlightThemeList* list) {
 
   FILE* f = fopen(file_name, "r");
   if (f == NULL) {
-    fprintf(stderr, "Unable to open file %s.\n\r", file_name);
+    notifyUser(NULL, LOG_WARNING, "Unable to open theme file %s.", file_name);
     return false;
   }
 

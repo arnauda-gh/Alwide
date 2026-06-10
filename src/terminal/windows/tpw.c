@@ -22,6 +22,7 @@ gui_TPW* gui_createToplevelPopup(gui_Context* gui_context, int y, int x, int hei
   tpw_context->on_input = input_cb;
   tpw_context->on_destroy = destroy_cb;
   tpw_context->payload = payload;
+  tpw_context->expiry_time = 0;
   tpw_context->next = NULL;
   tpw_context->strong_focus = true;
 

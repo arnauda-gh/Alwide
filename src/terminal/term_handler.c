@@ -25,6 +25,8 @@
 void gui_initGUIContext(gui_Context* gui_context) {
   gui_context->focus_w = NULL; // Used to set the window where start mouse drag
   gui_context->toplevel_popups = NULL;
+  gui_context->active_notifications = NULL;
+  gui_context->notification_count = 0;
 
   gui_initEDWContext(&gui_context->edw_context);
   gui_initFEWContext(&gui_context->few_context);
@@ -103,13 +105,6 @@ void gui_repaintGUI(gui_Context* gui_context, WindowHighlightDescriptor* highlig
   doupdate();
 }
 
-
-void gui_printChar_U8ToNcurses(WINDOW* w, Char_U8 ch) {
-  int size = sizeChar_U8(ch);
-  if (size > 0) {
-    waddnstr(w, ch.t, size);
-  }
-}
 
 
 LineMarker gui_getMarkerForCurrentLine(int row, WindowHighlightDescriptor* highlight_descriptor, int whd_offset,
@@ -262,54 +257,3 @@ LineIdentifier getLineIdForScreenX(LineIdentifier line_id, int screen_x, int x_c
 
 void setDesiredColumn(Cursor cursor, int* desired_column) { *desired_column = cursor.line_id.absolute_column; }
 
-
-void printToWindow(WINDOW* w, char* ch, int length, int offset_x, int offset_y, int line_length, int max_line_number,
-                   int tab_size) {
-  if (length == -1) {
-    length = strlen(ch);
-  }
-  if (max_line_number == 0) {
-    max_line_number = INT_MAX;
-  }
-  const Char_U8 space = readChar_U8FromCharArray(" ");
-
-  wmove(w, offset_y, offset_x);
-
-  int current_row = 0;
-  int current_ch_index = 0;
-  int current_line_length = 0;
-  while (current_ch_index < length && current_row < max_line_number) {
-
-    if (ch[current_ch_index] == '\n') {
-      current_line_length = 0;
-      current_row++;
-      wmove(w, offset_y + current_row, offset_x);
-    }
-    else {
-      Char_U8 tmp_ch = readChar_U8FromCharArray(ch + current_ch_index);
-      current_ch_index += sizeChar_U8(tmp_ch) - 1;
-
-      if (current_line_length + charPrintSize(tmp_ch, tab_size) > line_length) {
-        current_line_length = 0;
-        current_row++;
-        wmove(w, offset_y + current_row, offset_x);
-        if (current_row >= max_line_number) {
-          break;
-        }
-      }
-
-      current_line_length += charPrintSize(tmp_ch, tab_size);
-
-      if (tmp_ch.t[0] != '\t') {
-        gui_printChar_U8ToNcurses(w, tmp_ch);
-      }
-      else {
-        for (int i = 0; i < tab_size; i++) {
-          gui_printChar_U8ToNcurses(w, space);
-        }
-      }
-    }
-
-    current_ch_index++;
-  }
-}
