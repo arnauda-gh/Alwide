@@ -116,6 +116,7 @@ void setupFileContainer(char* path, FileContainer* container) {
   fetchSavedCursorPosition(container->io_file, &container->cursor, &container->screen_x, &container->screen_y);
   container->old_cur = container->cursor; // set the old_cursor after
   loadCurrentStateControl(container->history_root, &container->history_frame, container->io_file);
+  container->saved_state_id = container->history_frame->state_id;
 }
 
 
@@ -184,6 +185,14 @@ void setupOpenedFiles(int* file_count, char** file_names, FileContainer** files)
 FilesState filesStateOf(FileContainer** files, int* size, int* current_file_index, bool* refresh_local_vars) {
   return (FilesState){
     .files = files, .size = size, .current_file_index = current_file_index, .refresh_local_vars = refresh_local_vars};
+}
+
+bool saveFileContainer(FileContainer* fc) {
+  if (saveFile(fc->root, &fc->io_file)) {
+    fc->saved_state_id = fc->history_frame->state_id;
+    return true;
+  }
+  return false;
 }
 
 //// -------------- CURSOR MANAGEMENT --------------
@@ -642,8 +651,14 @@ void initTextBuffer(TextBuffer* tb, LF_LanguageFeature* feature) {
   initHistory(tb->history_root);
   tb->history_frame = tb->history_root;
 
+  tb->saved_state_id = tb->history_root->state_id;
+
   tb->feature = feature;
 }
+
+bool tb_isEdited(TextBuffer tb) { return tb.history_frame->state_id != tb.saved_state_id; }
+
+bool isFileEdited(FileContainer* file) { return tb_isEdited(file->buffer); }
 
 void destroyTextBuffer(TextBuffer* tb) {
   destroyFullFile(tb->root);

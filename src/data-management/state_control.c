@@ -8,8 +8,10 @@
 #include "file_management.h"
 #include "state_control.h"
 
+static uint64_t global_state_id_counter = 1;
 
 void initHistory(History* history) {
+  history->state_id = global_state_id_counter++;
   history->action.action = ACTION_NONE;
   history->action.time = 0;
   history->prev = NULL;
@@ -79,6 +81,7 @@ void saveAction(History** history_p, Action action,
   history->next = malloc(sizeof(History));
 
   assert(history->next != NULL);
+  history->next->state_id = global_state_id_counter++;
   history->next->prev = history;
   history->next->next = NULL;
   history->next->action = action;

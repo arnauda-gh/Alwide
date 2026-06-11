@@ -10,6 +10,7 @@
 #include "state_control.h"
 
 
+// !! WARNING !! EVERY MODIFICATION TO TEXT_BUFFER HAS TO BE REPORTED INTO FILECONTAINER INTO THE UNION
 typedef struct {
   FileNode* root;              // The root of the File object
   Cursor cursor;               // The current cursor for the root File
@@ -22,12 +23,14 @@ typedef struct {
   int old_screen_y;            // old screen_y used to flag screen_y changes
   History* history_root;       // Root of History object for the current File
   History* history_frame;      // Current node of the History. Before -> Undo, After -> Redo.
+  uint64_t saved_state_id;     // The ID of the state when last saved
   LF_LanguageFeature* feature; // Language feature config detected for this file (tabs, pairs, LSP, comments).
 } TextBuffer;
 
 void initTextBuffer(TextBuffer* tb, LF_LanguageFeature* feature);
 void destroyTextBuffer(TextBuffer* tb);
 bool tb_handleKey(TextBuffer* tb, int key, PayloadStateChange* state_change);
+bool tb_isEdited(TextBuffer tb);
 
 typedef struct {
   IO_FileID io_file; // Describe the IO file on OS
@@ -44,6 +47,7 @@ typedef struct {
       int old_screen_y;            // old screen_y used to flag screen_y changes
       History* history_root;       // Root of History object for the current File
       History* history_frame;      // Current node of the History. Before -> Undo, After -> Redo.
+      uint64_t saved_state_id;     // The ID of the state when last saved
       LF_LanguageFeature* feature; // Language feature config detected for this file (tabs, pairs, LSP, comments).
     };
     TextBuffer buffer;
@@ -51,6 +55,8 @@ typedef struct {
   TS_Data highlight_data; // Object which represent the highlight_data of the current file.
   LSP_Data lsp_datas;     // Object which contain all the datas of lsp.
 } FileContainer;
+
+bool isFileEdited(FileContainer* file);
 
 typedef struct {
   FileContainer** files;
@@ -85,6 +91,8 @@ bool isFileContainerEmpty(FileContainer* container);
 void setupOpenedFiles(int* file_count, char** file_names, FileContainer** files);
 
 FilesState filesStateOf(FileContainer** files, int* size, int* current_file_index, bool* refresh_local_vars);
+
+bool saveFileContainer(FileContainer* fc);
 
 
 ////// -------------- CURSOR ACTIONS --------------

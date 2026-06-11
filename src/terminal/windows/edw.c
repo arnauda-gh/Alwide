@@ -494,7 +494,7 @@ void gui_repaintSBW(gui_EDW* context, FileContainer* fc) {
   whline(context->sbw, ' ', width);
 
   // Print left-aligned text (file name)
-  mvwprintw(context->sbw, 0, 2, "%s", left_str);
+  mvwprintw(context->sbw, 0, 2, "%s%s", left_str, isFileEdited(fc) ? " *" : "");
 
   // print the right-aligned text
   wmove(context->sbw, 0, width - str_len);

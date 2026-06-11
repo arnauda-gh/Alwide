@@ -537,7 +537,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
         askFormatting(fc);
         waitForLspResponse(ctx, 200);
       }
-      if (saveFile(*root, io_file)) {
+      if (saveFileContainer(fc)) {
         notifyUser(ctx, LOG_INFO, "File saved successfully.");
       }
       else {
