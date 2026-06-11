@@ -135,7 +135,7 @@ void TS_highlightCurrentFile(TS_Data* highlight_data, WINDOW* ftw, int screen_x,
   TSQueryCursor* qcursor = ts_query_cursor_new();
   TSPoint begin;
   begin.row = screen_y - 1;
-  begin.column = screen_x;
+  begin.column = screen_x - 1;
   TSPoint end;
   end.row = screen_y + height - 2;
   end.column = screen_x + width;

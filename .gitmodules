@@ -82,3 +82,7 @@
 	path = lib/tree-sitter-latex
 	url = https://github.com/latex-lsp/tree-sitter-latex
 	ignore = untracked
+[submodule "lib/tree-sitter-ini"]
+	path = lib/tree-sitter-ini
+	url = https://github.com/justinmk/tree-sitter-ini
+	ignore = untracked
