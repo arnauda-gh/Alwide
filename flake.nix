@@ -19,7 +19,6 @@
             pkgs.rustc
             pkgs.cargo
             pkgs.rustPlatform.cargoSetupHook
-            pkgs.nodejs
             pkgs.tree-sitter
           ];
           buildInputs = [
