@@ -1,12 +1,11 @@
 #include "setup.h"
 #include <locale.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "constants.h"
+#include "../utils/logger.h"
 
 void setupProgramEnvironnemnt() {
   signal(SIGPIPE, SIG_IGN);
@@ -16,6 +15,8 @@ void setupProgramEnvironnemnt() {
     dup2(fileno(f), STDERR_FILENO);
     fclose(f);
   }
+
+  setNotificationThreshold(LOG_DEBUG);
 #else
   FILE* f = fopen("/dev/null", "w");
   dup2(fileno(f), STDERR_FILENO);

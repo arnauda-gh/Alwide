@@ -195,7 +195,7 @@ static void processMouseInput(EditorContext* ctx) {
               ctx->t_clock = clock();
 
               if (tmp_event.bstate == NO_EVENT_MOUSE) {
-                fprintf(stderr, "Mouse event skipped !\n");
+                notifyUser(ctx, LOG_DEBUG, "Mouse event skipped !\n");
                 // It is a drag/move event: we can continue coalescing
                 continue;
               }

@@ -42,7 +42,7 @@ static int calculate_message_height(const char* message, int line_length, int ta
 
 void renderNotification(WINDOW* w, const char* message, int level, int width, int height) {
   int color = INFO_COLOR_PAIR;
-  char prefix[16] = "[INFO] ";
+  char prefix[16] = "[DEBUG] ";
   if (level >= 4) { // CRITICAL
     color = ERROR_COLOR_PAIR;
     strcpy(prefix, "[CRIT] ");
@@ -54,6 +54,10 @@ void renderNotification(WINDOW* w, const char* message, int level, int width, in
   else if (level == 2) { // WARNING
     color = WARNING_COLOR_PAIR;
     strcpy(prefix, "[WARN] ");
+  }
+  else if (level == 1) { // INFO
+    color = INFO_COLOR_PAIR;
+    strcpy(prefix, "[INFO] ");
   }
 
   werase(w);
