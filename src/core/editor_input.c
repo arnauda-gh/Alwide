@@ -329,7 +329,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
   switch (key) {
     case H_KEY_MOUSE:
       handleClick(ctx);
-      break;
+      return EVENT_READ_INPUT;
     case K_SPECIAL(K_MOD_CTRL, 'k'):
     case H_KEY_RIGHT:
       if (cursor_is_disabled(*select_cursor)) {
@@ -660,6 +660,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
     default:
       /* Unmapped command, release, or hotkey sequence: safely ignore it */
       logInput(key);
+      return EVENT_READ_INPUT;
       break;
   }
   return EVENT_CONTINUE;
