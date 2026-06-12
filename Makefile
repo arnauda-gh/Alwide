@@ -72,6 +72,7 @@ SRC_MODULES= \
 	src/terminal/windows/pow.c \
 	src/terminal/windows/tpw.c \
 	src/terminal/windows/popups/search_popup.c \
+	src/terminal/windows/popups/quit_popup.c \
 	src/terminal/windows/popups/notification_popup.c \
 	src/terminal/windows/widgets/text_box.c \
 	src/terminal/graphics_tools.c \
