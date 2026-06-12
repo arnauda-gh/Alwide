@@ -33,6 +33,8 @@ typedef struct {
   time_val last_time_mouse_drag;
   time_val t_date;
   clock_t t_clock;
+  bool quit_popup_active;
+  bool force_quit;
 } EditorContext;
 
 FileContainer* getActiveFile(EditorContext* ctx);

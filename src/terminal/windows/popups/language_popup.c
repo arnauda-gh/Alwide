@@ -190,8 +190,7 @@ void gui_openLanguageSelectPopup(void* ctx_void) {
   int popup_y = LINES - 1 - popup_h;
   int popup_x = COLS - popup_w;
 
-  gui_TPW* popup = gui_createToplevelPopup(&ctx->gui_context, popup_y, popup_x, popup_h, popup_w, paint_lang_popup,
-                                           input_lang_popup, destroy_lang_popup, state);
-  gui_setTPWStrongFocus(&ctx->gui_context, popup, true);
+  gui_createToplevelPopup(&ctx->gui_context, popup_y, popup_x, popup_h, popup_w, paint_lang_popup, input_lang_popup,
+                          destroy_lang_popup, state);
   gui_updateGUI(&ctx->gui_context);
 }

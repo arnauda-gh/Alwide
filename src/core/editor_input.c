@@ -23,6 +23,7 @@
 #include "../terminal/windows/ofw.h"
 #include "../terminal/windows/popups/notification_popup.h"
 #include "../terminal/windows/popups/search_popup.h"
+#include "../terminal/windows/popups/quit_popup.h"
 #include "../terminal/windows/pow.h"
 #include "../utils/clipboard_manager.h"
 #include "../utils/logger.h"
@@ -30,6 +31,10 @@
 #include "editor_lsp.h"
 
 EventLoopAction dispatchInput(EditorContext* ctx, int key) {
+  if (ctx->force_quit) {
+    return EVENT_QUIT;
+  }
+
   // if input is empty, execute nothing and read again
   if (key == ERR) {
     return EVENT_READ_INPUT;
@@ -41,6 +46,9 @@ EventLoopAction dispatchInput(EditorContext* ctx, int key) {
   }
 
   if (handlePopupInput(ctx, key)) {
+    if (ctx->force_quit) {
+      return EVENT_QUIT;
+    }
     return EVENT_READ_INPUT;
   }
 
@@ -74,6 +82,25 @@ bool handlePopupInput(EditorContext* ctx, int key) {
 
 bool runInternalLogic(EditorContext* ctx, int key, EventLoopAction* out_action) {
   if (key == K_SPECIAL(K_MOD_CTRL, 'q')) {
+    if (gui_isQuitPopupActive(ctx)) {
+      *out_action = EVENT_QUIT;
+      return true;
+    }
+
+    bool any_edited = false;
+    for (int i = 0; i < ctx->file_count; i++) {
+      if (isFileEdited(&ctx->files[i])) {
+        any_edited = true;
+        break;
+      }
+    }
+
+    if (any_edited) {
+      gui_openQuitPopup(ctx);
+      *out_action = EVENT_CONTINUE;
+      return true;
+    }
+
     *out_action = EVENT_QUIT;
     return true;
   }
@@ -537,7 +564,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
         askFormatting(fc);
         waitForLspResponse(ctx, 200);
       }
-      if (saveFile(*root, io_file)) {
+      if (saveFileContainer(fc)) {
         notifyUser(ctx, LOG_INFO, "File saved successfully.");
       }
       else {
