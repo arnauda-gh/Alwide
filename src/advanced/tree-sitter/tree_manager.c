@@ -128,6 +128,9 @@ void getTSLanguageFromString(const TSLanguage** lang, char* language) {
   else if (strcmp(language, "latex") == 0) {
     *lang = tree_sitter_latex();
   }
+  else if (strcmp(language, "ini") == 0) {
+    *lang = tree_sitter_ini();
+  }
   else {
     *lang = NULL;
   }

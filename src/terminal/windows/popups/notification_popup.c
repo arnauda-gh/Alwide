@@ -1,10 +1,10 @@
 #include "notification_popup.h"
+#include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ncurses.h>
+#include "../../../data-management/utf_8_extractor.h"
 #include "../../../environnement/constants.h"
 #include "../../../utils/tools.h"
-#include "../../../data-management/utf_8_extractor.h"
 #include "../../graphics_tools.h"
 #include "../../key_management.h"
 #include "../tpw.h"
@@ -42,7 +42,7 @@ static int calculate_message_height(const char* message, int line_length, int ta
 
 void renderNotification(WINDOW* w, const char* message, int level, int width, int height) {
   int color = INFO_COLOR_PAIR;
-  char prefix[16] = "[INFO] ";
+  char prefix[16] = "[DEBUG] ";
   if (level >= 4) { // CRITICAL
     color = ERROR_COLOR_PAIR;
     strcpy(prefix, "[CRIT] ");
@@ -54,6 +54,10 @@ void renderNotification(WINDOW* w, const char* message, int level, int width, in
   else if (level == 2) { // WARNING
     color = WARNING_COLOR_PAIR;
     strcpy(prefix, "[WARN] ");
+  }
+  else if (level == 1) { // INFO
+    color = INFO_COLOR_PAIR;
+    strcpy(prefix, "[INFO] ");
   }
 
   werase(w);
@@ -188,7 +192,7 @@ void gui_openNotificationPopup(EditorContext* ctx, const char* message, int leve
                                    input_notification_popup, destroy_notification_popup, n);
   if (n->tpw) {
     wbkgd(n->tpw->tpw, COLOR_PAIR(DEFAULT_COLOR_PAIR));
-    
+
     int duration_ms = 3000;
     switch (level) {
       case 0: // LOG_DEBUG
@@ -205,9 +209,9 @@ void gui_openNotificationPopup(EditorContext* ctx, const char* message, int leve
         duration_ms = 12000;
         break;
     }
-    
+
     n->tpw->expiry_time = timeInMilliseconds() + duration_ms;
-    n->tpw->strong_focus = false;
+    gui_setTPWStrongFocus(&ctx->gui_context, n->tpw, false);
     // Reposition all notifications to align correctly
     reposition_notifications(&ctx->gui_context);
   }

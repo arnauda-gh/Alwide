@@ -42,6 +42,7 @@ typedef struct {
 
 
 struct History_ {
+  uint64_t state_id;
   Action action;
 
   struct History_* next;

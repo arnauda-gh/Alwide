@@ -15,6 +15,8 @@ void initDefaultContext(int file_count, EditorContext* ctx) {
   ctx->t_date = timeInMilliseconds();
   ctx->t_clock = clock();
   ctx->peek_c = -1;
+  ctx->quit_popup_active = false;
+  ctx->force_quit = false;
 }
 
 void setupFileExplorer(EditorContext* ctx) {

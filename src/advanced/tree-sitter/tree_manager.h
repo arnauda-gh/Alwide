@@ -106,6 +106,8 @@ const TSLanguage* tree_sitter_html(void);
 
 const TSLanguage* tree_sitter_latex(void);
 
+const TSLanguage* tree_sitter_ini(void);
+
 void initParserList(ParserList* list);
 
 void destroyParserList(ParserList* list);

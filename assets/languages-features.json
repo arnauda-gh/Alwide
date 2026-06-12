@@ -551,5 +551,31 @@
       "exe": "html-languageserver",
       "arguments": ["--stdio"]
     }
+  },
+  {
+    "label": "INI",
+    "id": "ini",
+    "detect": {
+      "extensions": [".ini", ".desktop", ".cfg", ".conf"],
+      "file-name": [],
+      "shebang": []
+    },
+    "comments": {
+      "line": ";",
+      "block": []
+    },
+    "tabulation": {
+      "size": 4,
+      "space": true
+    },
+    "pairs": [
+      ["[", "]"],
+      ["\"", "\""],
+      ["'", "'"]
+    ],
+    "lsp": {
+      "exe": "",
+      "arguments": []
+    }
   }
 ]

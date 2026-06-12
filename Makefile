@@ -72,6 +72,7 @@ SRC_MODULES= \
 	src/terminal/windows/pow.c \
 	src/terminal/windows/tpw.c \
 	src/terminal/windows/popups/search_popup.c \
+	src/terminal/windows/popups/quit_popup.c \
 	src/terminal/windows/popups/notification_popup.c \
 	src/terminal/windows/widgets/text_box.c \
 	src/terminal/graphics_tools.c \
@@ -130,7 +131,8 @@ RUST_MODULES= \
 	lib/tree-sitter-lua/target/release/libtree_sitter_lua.rlib \
 	lib/tree-sitter-asm/target/release/libtree_sitter_asm.rlib \
 	lib/tree-sitter-html/target/release/libtree_sitter_html.rlib \
-	lib/tree-sitter-latex/target/release/libtree_sitter_latex.rlib
+	lib/tree-sitter-latex/target/release/libtree_sitter_latex.rlib \
+	lib/tree-sitter-ini/target/release/libtree_sitter_ini.rlib
 
 # Map sources to objects in BUILD_DIR
 OBJECTS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_MODULES) $(LIB_C_MODULES))
