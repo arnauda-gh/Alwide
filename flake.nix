@@ -2,7 +2,7 @@
   description = "Alwide - A modern terminal-based code editor";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/26.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -49,7 +49,7 @@
         devShells.default = pkgs.mkShell {
           name = "alwide-dev";
           
-          nativeBuildInputs = commonInputs.nativeBuildInputs ++ [ pkgs.rustup ];
+          nativeBuildInputs = commonInputs.nativeBuildInputs;
           buildInputs = commonInputs.buildInputs;
 
           shellHook = ''
