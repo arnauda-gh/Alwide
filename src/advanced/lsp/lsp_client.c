@@ -76,9 +76,8 @@ bool LSP_openLSPServer(char* name, char* command_args, char* language, LSP_Serve
     close(server->outpipefd[1]);
     close(server->inpipefd[0]);
 
-
-    char command[strlen(name) + strlen(command_args) + strlen(" 2>> .lsp_logs.txt ") + 1 /*null char*/];
-    sprintf(command, "%s %s 2>> .lsp_logs.txt", name, command_args);
+    char command[PATH_MAX + strlen(command_args) + 64];
+    snprintf(command, sizeof(command), "%s %s 2>> .lsp_logs.txt", pathMemSafe, command_args);
 
     // system(command);
     // execl(pathMemSafe, "", (char *)NULL);
@@ -153,14 +152,15 @@ char* LSP_readPacket(LSP_Server* server) {
 
   // If the first header is not the expected one.
   if (n != header_size || strcmp(HEADER_FIRST_FIELD, buf) != 0) {
-    fprintf(stderr, "Error with lsp read : expected '%s' but got '%s'.\r\n", HEADER_FIRST_FIELD, buf);
+    buf[n] = '\0';
+    fprintf(stderr, "Error with lsp read : expected '%s' but got '%.*s' (len %d).\r\n", HEADER_FIRST_FIELD, n, buf, n);
     return NULL;
   }
 
   // save the value of the first field in buf.
   int index = 0;
   while (index < BUFF_SIZE - 1) {
-    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 100) != 1) {
+    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 1000) != 1) {
       break;
     }
     n = read(server->inpipefd[0], buf + index, 1);
@@ -181,7 +181,7 @@ char* LSP_readPacket(LSP_Server* server) {
   // Extract the full second field. (This field is ignored).
   index = 0;
   while (index < BUFF_SIZE - 1) {
-    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 100) != 1) {
+    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 1000) != 1) {
       break;
     }
     n = read(server->inpipefd[0], buf + index, 1);
@@ -194,7 +194,7 @@ char* LSP_readPacket(LSP_Server* server) {
   // reach first '{' some lsp servers add more break lines...  :/
   index = 0;
   while (index < BUFF_SIZE - 1) {
-    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 100) != 1) {
+    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 1000) != 1) {
       break;
     }
     n = read(server->inpipefd[0], buf, 1);
@@ -212,7 +212,7 @@ char* LSP_readPacket(LSP_Server* server) {
   content[0] = '{'; // We already read the first '{'
   n = 0;
   while (n < content_length - 1) {
-    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 1000) != 1) {
+    if (poll(&(struct pollfd){.fd = server->inpipefd[0], .events = POLLIN}, 1, 2000) != 1) {
       fprintf(stderr, "LSP timeout while reading body.\n");
       break;
     }
@@ -572,8 +572,23 @@ static void extractDataFromServerCapability(LSP_Server* lsp) {
 
   // Default to UTF-16
   lsp->position_encoding = LSP_POSITION_ENCODING_UTF16;
+  // Default to Full (1) or None (0)? LSP spec says servers should provide it. 
+  // If not provided, we'll assume None to be safe, or Full if we want to try.
+  lsp->sync_kind = 0; 
 
   if (server_capabilities) {
+    cJSON* sync = cJSON_GetObjectItem(server_capabilities, "textDocumentSync");
+    if (sync) {
+      if (cJSON_IsNumber(sync)) {
+        lsp->sync_kind = sync->valueint;
+      } else if (cJSON_IsObject(sync)) {
+        cJSON* change = cJSON_GetObjectItem(sync, "change");
+        if (change && cJSON_IsNumber(change)) {
+          lsp->sync_kind = change->valueint;
+        }
+      }
+    }
+
     cJSON* positionEncoding = cJSON_GetObjectItem(server_capabilities, "positionEncoding");
     if (positionEncoding && cJSON_IsString(positionEncoding)) {
       char* encoding_str = cJSON_GetStringValue(positionEncoding);
@@ -623,9 +638,21 @@ void LSP_initializeServer(LSP_Server* lsp, char* client_name, char* client_versi
   cJSON_Delete(init_params);
 
   // Wait for the lsp init packet to be received
-  cJSON* content = LSP_readPacketAsJSON(lsp, true);
-  // this assert will also check if the packet is a request.
-  assert(tmp_id == LSP_getPacketID(content));
+  cJSON* content = NULL;
+  while (true) {
+    content = LSP_readPacketAsJSON(lsp, true);
+    if (content == NULL) {
+      fprintf(stderr, "LSP server closed connection during initialization.\n");
+      return;
+    }
+    LSP_PACKET_TYPE type = LSP_getPacketType(content);
+    if (type == LSP_RESPONSE && LSP_getPacketID(content) == (LSP_PacketID)tmp_id) {
+      break;
+    }
+    // Skip notifications or other requests during init
+    cJSON_Delete(content);
+  }
+
   lsp->init_result = LSP_extractPacketResult(content);
 
   // Extract data from the packet just received from the lsp server.
@@ -1215,11 +1242,17 @@ void LSP_destroyDiagnostic(LSP_Diagnostic* diagnostic) {}
 void LSP_getCompletionListFromJSON(cJSON* json, LSP_CompletionList* list) {
   assert(json != NULL);
 
-  // isIncomplete
-  cJSON* isIncompleteItem = cJSON_GetObjectItem(json, "isIncomplete");
-  list->isIncomplete = !(isIncompleteItem == NULL || cJSON_IsFalse(isIncompleteItem));
+  if (cJSON_IsArray(json)) {
+    list->isIncomplete = false;
+    LSP_getCompletionArrayFromJSON(json, &list->completions);
+  }
+  else {
+    // isIncomplete
+    cJSON* isIncompleteItem = cJSON_GetObjectItem(json, "isIncomplete");
+    list->isIncomplete = !(isIncompleteItem == NULL || cJSON_IsFalse(isIncompleteItem));
 
-  LSP_getCompletionArrayFromJSON(cJSON_GetObjectItem(json, "items"), &list->completions);
+    LSP_getCompletionArrayFromJSON(cJSON_GetObjectItem(json, "items"), &list->completions);
+  }
 }
 
 

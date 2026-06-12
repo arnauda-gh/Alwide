@@ -69,6 +69,7 @@ typedef struct {
 
   // Capabilities
   LSP_PositionEncoding position_encoding;
+  int sync_kind;
   char** on_type_trigger_chars;
   int on_type_trigger_chars_count;
 } LSP_Server;

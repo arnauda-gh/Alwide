@@ -189,7 +189,7 @@
       ["'", "'"]
     ],
     "lsp": {
-      "exe": "makefile-language-server",
+      "exe": "makefile-lsp",
       "arguments": []
     }
   },
@@ -217,7 +217,7 @@
       ["'", "'"]
     ],
     "lsp": {
-      "exe": "css-languageserver",
+      "exe": "vscode-css-language-server",
       "arguments": ["--stdio"]
     }
   },
@@ -329,7 +329,7 @@
       ["\"", "\""]
     ],
     "lsp": {
-      "exe": "json-languageserver",
+      "exe": "vscode-json-language-server",
       "arguments": ["--stdio"]
     }
   },
@@ -469,7 +469,7 @@
       ["'", "'"]
     ],
     "lsp": {
-      "exe": "vhdl-ls",
+      "exe": "vhdl_ls",
       "arguments": []
     }
   },
@@ -548,7 +548,7 @@
       ["'", "'"]
     ],
     "lsp": {
-      "exe": "html-languageserver",
+      "exe": "vscode-html-language-server",
       "arguments": ["--stdio"]
     }
   },
