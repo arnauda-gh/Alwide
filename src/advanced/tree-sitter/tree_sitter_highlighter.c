@@ -7,6 +7,7 @@
 #include "../../../lib/tree-sitter/lib/src/tree.h"
 #include "../../environnement/constants.h"
 #include "../../environnement/global_variables.h"
+#include "../../utils/logger.h"
 #include "tree_query.h"
 
 
@@ -53,7 +54,12 @@ void saveCaptureToHighlightDescriptor(HighlightThemeList theme_list, Cursor tmp,
 
 void executeInjectionHighlightQuery(Cursor cursor, WindowHighlightDescriptor* highlight_descriptor,
                                     InjectionDescriptor* injection, int injection_depth) {
+  // Avoid printing logs for injection parser.
+  LogLevel tmp = getNotificationThreshold();
+  setNotificationThreshold(LOG_CRITICAL);
   ParserContainer* injected_parser = getParserForLanguage(&parsers, injection->lang_id);
+  setNotificationThreshold(tmp);
+
   if (injected_parser == NULL) {
     return;
   }
