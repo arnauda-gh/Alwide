@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "../../utils/logger.h"
 
 
 void readPublishDiagnostic(cJSON* params, LSP_ComputedData* computed_data) {
@@ -27,8 +28,7 @@ void notificationDispatcher(cJSON* packet, ModuleContext* data) {
   // fetch computed data
   int index = getIndexFileContainerForUri(data, params);
   if (index == -1) {
-    fprintf(stderr, "ERROR : Couldn't find the file for the current packet.\n");
-    assert(false); // TODO remove
+    notifyUser(NULL, LOG_DEBUG, "LSP Notification: Couldn't find the file for the current packet.");
     return;
   }
   LSP_ComputedData* computed_data = (*data->files_state.files)[index].lsp_datas.computed;
@@ -41,7 +41,6 @@ void notificationDispatcher(cJSON* packet, ModuleContext* data) {
     readPublishDiagnostic(params, computed_data);
   }
   else {
-    fprintf(stderr, "Method NOT SUPPORTED !\n      => %s\n", method);
-    assert(false); // TODO remove
+    notifyUser(NULL, LOG_DEBUG, "LSP Notification: Method NOT SUPPORTED '%s'.", method);
   }
 }
