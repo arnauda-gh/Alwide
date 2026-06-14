@@ -315,8 +315,21 @@ LSP_Position LSP_pos_from_cursor(LSP_Server* server_ptr, Cursor cursor) {
   }
   else {
     // Default to UTF-16
-    column_offset =
-      utf16_get_offset(cursor.line_id.line->ch, cursor.line_id.line->element_number, cursor.line_id.absolute_column);
+    int utf16_offset = 0;
+    LineNode* current = cursor.line_id.line;
+    while (current->prev != NULL) {
+      current = current->prev;
+    }
+    while (current != cursor.line_id.line) {
+      for (int i = 0; i < current->element_number; i++) {
+        utf16_offset += utf16_length(current->ch[i]);
+      }
+      current = current->next;
+    }
+    for (int i = 0; i < cursor.line_id.relative_column; i++) {
+      utf16_offset += utf16_length(current->ch[i]);
+    }
+    column_offset = utf16_offset;
   }
 
   return (LSP_Position){.row = cursor.file_id.absolute_row - 1, .column = column_offset};
@@ -344,7 +357,23 @@ Cursor LSP_tryToReachCursorForLSPPosition(LSP_Server* server_ptr, Cursor cursor,
   }
   // Default to UTF-16
   Cursor target_row = tryToReachAbsPosition(cursor, LSP_0_row_to_1_row(position.row), 0);
-  int character_col =
-    utf16_get_char_column(target_row.line_id.line->ch, target_row.line_id.line->element_number, position.column);
-  return tryToReachAbsPosition(target_row, LSP_0_row_to_1_row(position.row), character_col);
+  LineNode* current = target_row.line_id.line;
+  while (current->prev != NULL) {
+    current = current->prev;
+  }
+
+  int current_utf16 = 0;
+  int char_col = 0;
+  while (current != NULL && current_utf16 < position.column) {
+    int i = 0;
+    for (; i < current->element_number && current_utf16 < position.column; i++) {
+      current_utf16 += utf16_length(current->ch[i]);
+    }
+    char_col += i;
+    if (current_utf16 >= position.column) {
+      break;
+    }
+    current = current->next;
+  }
+  return tryToReachAbsPosition(target_row, LSP_0_row_to_1_row(position.row), char_col);
 }

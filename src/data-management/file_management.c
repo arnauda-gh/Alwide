@@ -411,9 +411,9 @@ Cursor insertCharArrayAtCursor(Cursor cursor, char* chs, LF_Tabulation* tab) {
 
 Cursor insertCharArrayAtCursorWithState(History** history_p, Cursor cursor, char* chs,
                                         PayloadStateChange* payload_state_change, LF_Tabulation* tab) {
-  Cursor tmp = cursor;
+  CursorDescriptor tmp_desc = cursor_to_desc(cursor);
   cursor = insertCharArrayAtCursor(cursor, chs, tab);
-  saveAction(history_p, createInsertAction(tmp, cursor_to_desc(cursor)), globalOnStateChange, &cursor,
+  saveAction(history_p, createInsertAction(cursor, tmp_desc), globalOnStateChange, &cursor,
              payload_state_change);
 
   return cursor;
