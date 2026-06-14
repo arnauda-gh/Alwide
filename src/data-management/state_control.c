@@ -110,7 +110,7 @@ Cursor doReverseAction(Action* action_p, Cursor cursor,
       if (action.unique_ch == '\n') {
         cursor = insertNewLineInLineC(tmp);
         destroyAction(action);
-        *action_p = createInsertAction(tmp, cursor_to_desc(cursor));
+        *action_p = createInsertAction(cursor, cursor_to_desc(tmp));
         if (onEachStateChange != NULL) {
           onEachStateChange(*action_p, &cursor, payload);
         }
@@ -118,7 +118,7 @@ Cursor doReverseAction(Action* action_p, Cursor cursor,
       }
       cursor = insertCharInLineC(tmp, unicode_to_utf8(action.unique_ch));
       destroyAction(action);
-      *action_p = createInsertAction(tmp, cursor_to_desc(cursor));
+      *action_p = createInsertAction(cursor, cursor_to_desc(tmp));
       if (onEachStateChange != NULL) {
         onEachStateChange(*action_p, &cursor, payload);
       }
@@ -128,7 +128,7 @@ Cursor doReverseAction(Action* action_p, Cursor cursor,
       tmp.line_id = moduloLineIdentifierR(getLineForFileIdentifier(tmp.file_id), action.cur.column);
       cursor = insertCharArrayAtCursor(tmp, action.ch, tabulation);
       destroyAction(action);
-      *action_p = createInsertAction(tmp, cursor_to_desc(cursor));
+      *action_p = createInsertAction(cursor, cursor_to_desc(tmp));
       if (onEachStateChange != NULL) {
         onEachStateChange(*action_p, &cursor, payload);
       }

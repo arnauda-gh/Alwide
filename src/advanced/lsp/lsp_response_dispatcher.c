@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "../../utils/logger.h"
 
 #include "../../terminal/term_handler.h"
 #include "../../terminal/windows/edw.h"
@@ -23,8 +24,7 @@ void responseDispatcher(cJSON* packet, LSP_Server* lsp, ModuleContext* data) {
 
   int index = getIndexFileContainerForName(data, context.file_name);
   if (index == -1) {
-    fprintf(stderr, "ERROR : Couldn't find the file for the current response.\n");
-    assert(false); // TODO remove
+    notifyUser(NULL, LOG_DEBUG, "LSP Response: Couldn't find the file for the current response.");
     return;
   }
 
@@ -72,7 +72,6 @@ void responseDispatcher(cJSON* packet, LSP_Server* lsp, ModuleContext* data) {
     receiveGotoData(packet, lsp, file, data, &file->lsp_datas.computed->gotos, context.method, context.payload);
   }
   else {
-    fprintf(stderr, "Response method NOT SUPPORTED !\n      => %s\n", context.method);
-    assert(false); // TODO remove
+    notifyUser(NULL, LOG_DEBUG, "LSP Response: Method NOT SUPPORTED '%s'.", context.method);
   }
 }

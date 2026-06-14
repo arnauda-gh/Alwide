@@ -54,30 +54,31 @@ corresponding Language Server (LSP) on your system.
 
 > [!NOTE]
 > LSPs are **completely optional** and are not required for Alwide to function. The editor will run perfectly fine
-> without any LSP installed. Additionally, you are free to use any LSP server of your choice and configure its binary name
+> without any LSP installed. Additionally, you are free to use any LSP server of your choice and configure its binary
+> name
 > and command-line arguments in `~/.config/alwide/languages-features.json`.
 
 Here are some example of lsp servers :
 
-| Language                    | LSP Server                   | Command/Package Example                       |
-|:----------------------------|:-----------------------------|:----------------------------------------------|
-| **C / C++**                 | `clangd`                     | `apt install clangd` or `dnf install clangd`  |
-| **Python**                  | `pylsp`                      | `pip install python-lsp-server`               |
-| **Java**                    | `jdtls`                      | `eclipse-jdtls` package                       |
-| **Go**                      | `gopls`                      | `go install golang.org/x/tools/gopls@latest`  |
-| **JavaScript / TypeScript** | `typescript-language-server` | `npm install -g typescript-language-server`   |
-| **HTML**                    | `html-languageserver`        | `npm install -g vscode-langservers-extracted` |
-| **CSS / SCSS**              | `css-languageserver`         | `npm install -g vscode-langservers-extracted` |
-| **JSON**                    | `json-languageserver`        | `npm install -g vscode-langservers-extracted` |
-| **Bash**                    | `bash-language-server`       | `npm install -g bash-language-server`         |
-| **Markdown**                | `marksman`                   | `marksman` binary                             |
-| **Lua**                     | `lua-language-server`        | `lua-language-server` package                 |
-| **Dart**                    | `dart`                       | Included in Dart SDK (`dart language-server`) |
-| **C#**                      | `omnisharp`                  | `omnisharp` package                           |
-| **Makefile**                | `makefile-language-server`   | `npm install -g makefile-language-server`     |
-| **VHDL**                    | `vhdl-ls`                    | `vhdl-ls` cargo crate                         |
-| **Assembly**                | `asm-lsp`                    | `asm-lsp` binary                              |
-| **Latex**                   | `texlab`                     | `texlab` package                              |
+| Language                    | LSP Server                    | Command/Package Example                       |
+|:----------------------------|:------------------------------|:----------------------------------------------|
+| **C / C++**                 | `clangd`                      | `apt install clangd` or `dnf install clangd`  |
+| **Python**                  | `pylsp`                       | `pip install python-lsp-server`               |
+| **Java**                    | `jdtls`                       | `eclipse-jdtls` package                       |
+| **Go**                      | `gopls`                       | `go install golang.org/x/tools/gopls@latest`  |
+| **JavaScript / TypeScript** | `typescript-language-server`  | `npm install -g typescript-language-server`   |
+| **HTML**                    | `vscode-html-language-server` | `npm install -g vscode-langservers-extracted` |
+| **CSS / SCSS**              | `vscode-css-language-server`  | `npm install -g vscode-langservers-extracted` |
+| **JSON**                    | `vscode-json-language-server` | `npm install -g vscode-langservers-extracted` |
+| **Bash**                    | `bash-language-server`        | `npm install -g bash-language-server`         |
+| **Markdown**                | `marksman`                    | `marksman` binary                             |
+| **Lua**                     | `lua-language-server`         | `lua-language-server` package                 |
+| **Dart**                    | `dart`                        | Included in Dart SDK (`dart language-server`) |
+| **C#**                      | `omnisharp`                   | `omnisharp` package                           |
+| **Makefile**                | `makefile-lsp`                | `cargo install makefile-lsp`                  |
+| **VHDL**                    | `vhdl_ls`                     | `cargo install rust_hdl`                      |
+| **Assembly**                | `asm-lsp`                     | `asm-lsp` binary                              |
+| **Latex**                   | `texlab`                      | `texlab` package                              |
 
 ---
 
@@ -108,11 +109,13 @@ The easiest way to install Alwide and its assets is using the official installat
 curl -fsSL https://raw.githubusercontent.com/arnauda-gh/Alwide/main/install.sh | bash
 ```
 
-> **Note:** This script will download the latest binary and assets, place the binary in `~/.local/bin/al`, and setup the configuration in `~/.config/alwide/`. Make sure `~/.local/bin` is in your `PATH`.
+> **Note:** This script will download the latest binary and assets, place the binary in `~/.local/bin/al`, and setup the
+> configuration in `~/.config/alwide/`. Make sure `~/.local/bin` is in your `PATH`.
 
 ### Manual Installation & Packages
 
-You can also find pre-built binaries, AppImage, `.deb`, and `.rpm` packages in the [Releases section](https://github.com/arnauda-gh/Alwide/releases).
+You can also find pre-built binaries, AppImage, `.deb`, and `.rpm` packages in
+the [Releases section](https://github.com/arnauda-gh/Alwide/releases).
 
 ---
 
@@ -200,16 +203,18 @@ Or compile the production/release version:
 
 #### To install Alwide:
 
-You can install Alwide system-wide or locally. 
+You can install Alwide system-wide or locally.
 
 **1. System-wide installation (requires sudo):**
 This installs the binary and the default assets for all users.
+
 ```bash
 sudo make install
 ```
 
 **2. User configuration (recommended):**
 This copies the default themes and language settings to your home directory so you can customize them.
+
 ```bash
 make install-config
 ```
@@ -219,12 +224,15 @@ make install-config
 ## Configuration & Assets
 
 Alwide looks for its configuration (themes, language rules) in this order:
-1.  **Environment Variable**: `ALWIDE_ASSETS_PATH` (if set).
-2.  **User Folder**: `~/.config/alwide/`.
-3.  **System Folder**: `/usr/local/share/alwide/` (or your custom `PREFIX`).
+
+1. **Environment Variable**: `ALWIDE_ASSETS_PATH` (if set).
+2. **User Folder**: `~/.config/alwide/`.
+3. **System Folder**: `/usr/local/share/alwide/` (or your custom `PREFIX`).
 
 ### Customizing Alwide
+
 Your personal settings live in `~/.config/alwide/`:
+
 - `languages-features.json`: Custom LSP commands and per-language tweaks.
 - `theme/`: Color schemes for the editor.
 - `queries/`: Tree-sitter highlighting rules.
@@ -244,6 +252,7 @@ make release # To compile
 ```
 
 To install it via Nix:
+
 ```bash
 nix profile install .
 ```
