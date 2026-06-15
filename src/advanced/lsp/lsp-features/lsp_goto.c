@@ -5,8 +5,11 @@
 #include "../../../terminal/windows/edw.h"
 #include "../../../terminal/windows/pow.h"
 #include "../lsp-features/lsp_completion.h"
+#include "../../../core/features/navigation_history.h"
 
 void jumpToLocation(ModuleContext* data, LSP_Location location) {
+  pushNavigationPoint(data->editor_context);
+
   openNewFile(location.file_name.file_name, data->files_state.files, data->files_state.size,
               data->files_state.current_file_index, &data->view_port.gui->ofw_context.refresh_ofw,
               data->files_state.refresh_local_vars);
