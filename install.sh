@@ -26,6 +26,23 @@ if ! command -v unzip &> /dev/null; then
     exit 1
 fi
 
+# Detect architecture
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)
+        BINARY_PATTERN="linux-x86_64.tar.gz"
+        ;;
+    aarch64|arm64)
+        BINARY_PATTERN="linux-arm64.tar.gz"
+        ;;
+    *)
+        echo "❌ Error: Unsupported architecture: $ARCH"
+        exit 1
+        ;;
+esac
+
+echo "🔍 Detected architecture: $ARCH"
+
 # Get latest release info
 echo "🔍 Fetching latest release information..."
 RELEASE_INFO=$(curl -s "https://api.github.com/repos/$REPO/releases/latest")
@@ -36,7 +53,7 @@ if echo "$RELEASE_INFO" | grep -q "message.*Not Found"; then
     exit 1
 fi
 
-BINARY_URL=$(echo "$RELEASE_INFO" | grep "browser_download_url" | grep "linux-x86_64.tar.gz" | head -n 1 | cut -d '"' -f 4)
+BINARY_URL=$(echo "$RELEASE_INFO" | grep "browser_download_url" | grep "$BINARY_PATTERN" | head -n 1 | cut -d '"' -f 4)
 ASSETS_URL=$(echo "$RELEASE_INFO" | grep "browser_download_url" | grep "alwide-assets.zip" | head -n 1 | cut -d '"' -f 4)
 
 if [ -z "$BINARY_URL" ] || [ -z "$ASSETS_URL" ]; then
