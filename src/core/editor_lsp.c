@@ -18,6 +18,7 @@ ModuleContext buildModuleContext(EditorContext* ctx) {
   payload.view_port = viewPortOf(&ctx->gui_context, &fc->screen_x, &fc->screen_y);
   payload.cursor = &fc->cursor;
   payload.payload_state_change = &ctx->payload_state_change;
+  payload.editor_context = ctx;
   return payload;
 }
 

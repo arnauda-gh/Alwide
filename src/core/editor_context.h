@@ -7,6 +7,7 @@
 #include "../io-management/io_explorer.h"
 #include "../terminal/highlight.h"
 #include "../terminal/windows/edw.h"
+#include "features/navigation_history.h"
 
 typedef enum {
   EVENT_CONTINUE,
@@ -14,7 +15,7 @@ typedef enum {
   EVENT_READ_INPUT,
 } EventLoopAction;
 
-typedef struct {
+typedef struct EditorContext {
   FileContainer* files;
   int file_count;
   int current_file_index;
@@ -30,11 +31,11 @@ typedef struct {
   MEVENT m_event;
   int peek_c;
   bool mouse_drag;
-  time_val last_time_mouse_drag;
-  time_val t_date;
-  clock_t t_clock;
+
   bool quit_popup_active;
   bool force_quit;
+
+  NavigationHistory nav_history;
 } EditorContext;
 
 FileContainer* getActiveFile(EditorContext* ctx);
