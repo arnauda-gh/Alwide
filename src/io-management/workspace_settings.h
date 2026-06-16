@@ -3,12 +3,14 @@
 #include <stdbool.h>
 
 #include "../../lib/cJSON/cJSON.h"
+#include "../core/features/navigation_history.h"
 #include "../data-management/file_management.h"
 #include "../terminal/term_handler.h"
 
+
 #define FOLDER_DIR_SETTINGS_NAME ".workspace_settings"
 
-typedef struct {
+typedef struct WorkspaceSettings {
   // Is used
   bool is_used;
 
@@ -24,6 +26,12 @@ typedef struct {
 
   // Dir path
   char* dir_path;
+
+  // Navigation History
+  int nav_back_size;
+  NavigationLocation* nav_back_items;
+  int nav_forward_size;
+  NavigationLocation* nav_forward_items;
 } WorkspaceSettings;
 
 

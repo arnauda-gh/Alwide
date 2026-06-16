@@ -15,6 +15,10 @@
 #include "windows/few.h"
 #include "windows/popups/language_popup.h"
 #include "windows/pow.h"
+#include "../core/features/navigation_history.h"
+
+static int find_clicked_tab_index(gui_Context* gui, FileContainer* files, int file_count, int current_file,
+                                  const MEVENT* m);
 
 /* -------------------------------------------------------------------------- */
 /*                                Mouse Helpers                               */

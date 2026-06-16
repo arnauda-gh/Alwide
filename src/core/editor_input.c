@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <ncurses.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "../advanced/intelligence/auto_pairs.h"
@@ -22,13 +23,14 @@
 #include "../terminal/windows/few.h"
 #include "../terminal/windows/ofw.h"
 #include "../terminal/windows/popups/notification_popup.h"
-#include "../terminal/windows/popups/search_popup.h"
 #include "../terminal/windows/popups/quit_popup.h"
+#include "../terminal/windows/popups/search_popup.h"
 #include "../terminal/windows/pow.h"
 #include "../utils/clipboard_manager.h"
 #include "../utils/logger.h"
 #include "../utils/tools.h"
 #include "editor_lsp.h"
+#include "features/navigation_history.h"
 
 EventLoopAction dispatchInput(EditorContext* ctx, int key) {
   if (ctx->force_quit) {
@@ -40,29 +42,36 @@ EventLoopAction dispatchInput(EditorContext* ctx, int key) {
     return EVENT_READ_INPUT;
   }
 
-  EventLoopAction loopEnd = EVENT_READ_INPUT;
-  if (runInternalLogic(ctx, key, &loopEnd)) {
-    return loopEnd;
+  // navigation history setup
+  NavigationLocation prev_loc;
+  bool valid_prev = getActiveNavigationLocation(ctx, &prev_loc);
+
+
+
+
+  // Dispatcher pipeline fallback.
+  EventLoopAction ret_action = EVENT_READ_INPUT;
+
+  EventLoopAction tmp;
+  if (runInternalLogic(ctx, key, &tmp)) {
+    ret_action = tmp;
+  }
+  else if (handlePopupInput(ctx, key)) {
+    ret_action = ctx->force_quit ? EVENT_QUIT : EVENT_READ_INPUT;
+  }
+  else if (K_IS_SPECIAL(key)) {
+    ret_action = runSpecialKeyHandler(ctx, key);
+  }
+  else {
+    handleCharInsertion(ctx, key);
+    ret_action = EVENT_CONTINUE;
   }
 
-  if (handlePopupInput(ctx, key)) {
-    if (ctx->force_quit) {
-      return EVENT_QUIT;
-    }
-    return EVENT_READ_INPUT;
+  if (valid_prev) {
+    handleNavigationHistoryEvent(ctx, &prev_loc, key);
   }
 
-  /* Route all functional navigation, hotkeys, and releases to the command handler */
-  if (K_IS_SPECIAL(key)) {
-    return runSpecialKeyHandler(ctx, key);
-  }
-
-  /*
-   * Unified Routing:
-   * Any key NOT marked as Special is a printable character.
-   */
-  handleCharInsertion(ctx, key);
-  return EVENT_CONTINUE;
+  return ret_action;
 }
 
 
@@ -218,8 +227,6 @@ static void processMouseInput(EditorContext* ctx) {
               // Overwrite current m_event with the newly parsed mouse event
               ctx->m_event = tmp_event;
               detectComplexMouseEvents(&ctx->m_event);
-              ctx->t_date = timeInMilliseconds();
-              ctx->t_clock = clock();
 
               if (tmp_event.bstate == NO_EVENT_MOUSE) {
                 notifyUser(ctx, LOG_DEBUG, "Mouse event skipped !\n");
@@ -251,9 +258,6 @@ int readNextInput(EditorContext* ctx) {
   if (c == ERR) {
     return ERR;
   }
-
-  ctx->t_date = timeInMilliseconds();
-  ctx->t_clock = clock();
 
   int key = ERR;
 
@@ -514,6 +518,12 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       setDesiredColumn(*cursor, desired_column);
       gui_updateEDW(&ctx->gui_context);
       askCompletion(&ctx->gui_context, fc, true, false);
+      break;
+    case K_SPECIAL(K_MOD_CTRL, 'u'):
+      navigateBack(ctx);
+      break;
+    case K_SPECIAL(K_MOD_CTRL, 'p'):
+      navigateForward(ctx);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'c'):
       saveToClipBoard(*cursor, *select_cursor);

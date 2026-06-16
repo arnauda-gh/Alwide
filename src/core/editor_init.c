@@ -11,12 +11,10 @@ void initDefaultContext(int file_count, EditorContext* ctx) {
   ctx->refresh_local_vars = true;
   ctx->old_history_frame = NULL;
   ctx->mouse_drag = false;
-  ctx->last_time_mouse_drag = timeInMilliseconds();
-  ctx->t_date = timeInMilliseconds();
-  ctx->t_clock = clock();
   ctx->peek_c = -1;
   ctx->quit_popup_active = false;
   ctx->force_quit = false;
+  initNavigationHistory(&ctx->nav_history);
 }
 
 void setupFileExplorer(EditorContext* ctx) {

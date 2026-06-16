@@ -24,6 +24,11 @@ void getWorkspaceSettingsForCurrentDir(WorkspaceSettings* settings, FileContaine
   settings->file_explorer_size = file_explorer_size;
   settings->showing_file_explorer_window = showing_file_explorer_window;
   settings->showing_opened_file_window = showing_opened_file_window;
+
+  settings->nav_back_size = 0;
+  settings->nav_back_items = NULL;
+  settings->nav_forward_size = 0;
+  settings->nav_forward_items = NULL;
 }
 
 void destroyWorkspaceSettings(WorkspaceSettings* settings) {
@@ -31,6 +36,13 @@ void destroyWorkspaceSettings(WorkspaceSettings* settings) {
     free(settings->files[i]);
   }
   free(settings->files);
+
+  if (settings->nav_back_items != NULL) {
+    free(settings->nav_back_items);
+  }
+  if (settings->nav_forward_items != NULL) {
+    free(settings->nav_forward_items);
+  }
 }
 
 void touchDirSettingsFolder() {
@@ -100,6 +112,10 @@ bool loadWorkspaceSettings(char* dir_path, WorkspaceSettings* settings) {
     settings->showing_file_explorer_window = false;
     settings->showing_opened_file_window = false;
     settings->file_explorer_size = 0;
+    settings->nav_back_size = 0;
+    settings->nav_back_items = NULL;
+    settings->nav_forward_size = 0;
+    settings->nav_forward_items = NULL;
     // fprintf(stderr, "Unable to load dir settings.\r\n");
     return false;
   }
@@ -137,6 +153,28 @@ cJSON* WorkspaceSettingsToJSON(WorkspaceSettings* settings) {
   cJSON_AddBoolToObject(json_settings, "showing_file_explorer_window", settings->showing_file_explorer_window);
   cJSON_AddNumberToObject(json_settings, "file_explorer_size", settings->file_explorer_size);
 
+  cJSON* nav_back_array = cJSON_AddArrayToObject(json_settings, "nav_back");
+  for (int i = 0; i < settings->nav_back_size; i++) {
+    cJSON* loc_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(loc_json, "file_path", settings->nav_back_items[i].file_path);
+    cJSON_AddNumberToObject(loc_json, "row", settings->nav_back_items[i].row);
+    cJSON_AddNumberToObject(loc_json, "column", settings->nav_back_items[i].column);
+    cJSON_AddNumberToObject(loc_json, "screen_x", settings->nav_back_items[i].screen_x);
+    cJSON_AddNumberToObject(loc_json, "screen_y", settings->nav_back_items[i].screen_y);
+    cJSON_AddItemToArray(nav_back_array, loc_json);
+  }
+
+  cJSON* nav_forward_array = cJSON_AddArrayToObject(json_settings, "nav_forward");
+  for (int i = 0; i < settings->nav_forward_size; i++) {
+    cJSON* loc_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(loc_json, "file_path", settings->nav_forward_items[i].file_path);
+    cJSON_AddNumberToObject(loc_json, "row", settings->nav_forward_items[i].row);
+    cJSON_AddNumberToObject(loc_json, "column", settings->nav_forward_items[i].column);
+    cJSON_AddNumberToObject(loc_json, "screen_x", settings->nav_forward_items[i].screen_x);
+    cJSON_AddNumberToObject(loc_json, "screen_y", settings->nav_forward_items[i].screen_y);
+    cJSON_AddItemToArray(nav_forward_array, loc_json);
+  }
+
   return json_settings;
 }
 
@@ -157,6 +195,78 @@ void JSONToWorkspaceSettings(WorkspaceSettings* settings, cJSON* json) {
   settings->showing_opened_file_window = cJSON_IsTrue(cJSON_GetObjectItem(json, "showing_opened_file_window"));
   settings->showing_file_explorer_window = cJSON_IsTrue(cJSON_GetObjectItem(json, "showing_file_explorer_window"));
   settings->file_explorer_size = cJSON_GetNumberValue(cJSON_GetObjectItem(json, "file_explorer_size"));
+
+  cJSON* nav_back_array = cJSON_GetObjectItem(json, "nav_back");
+  if (cJSON_IsArray(nav_back_array)) {
+    settings->nav_back_size = cJSON_GetArraySize(nav_back_array);
+    if (settings->nav_back_size > 0) {
+      settings->nav_back_items = malloc(settings->nav_back_size * sizeof(NavigationLocation));
+      for (int i = 0; i < settings->nav_back_size; i++) {
+        cJSON* item = cJSON_GetArrayItem(nav_back_array, i);
+        cJSON* file_path = cJSON_GetObjectItem(item, "file_path");
+        cJSON* row = cJSON_GetObjectItem(item, "row");
+        cJSON* column = cJSON_GetObjectItem(item, "column");
+        cJSON* screen_x = cJSON_GetObjectItem(item, "screen_x");
+        cJSON* screen_y = cJSON_GetObjectItem(item, "screen_y");
+
+        if (cJSON_IsString(file_path)) {
+          strncpy(settings->nav_back_items[i].file_path, cJSON_GetStringValue(file_path),
+                  sizeof(settings->nav_back_items[i].file_path) - 1);
+          settings->nav_back_items[i].file_path[sizeof(settings->nav_back_items[i].file_path) - 1] = '\0';
+        }
+        else {
+          settings->nav_back_items[i].file_path[0] = '\0';
+        }
+        settings->nav_back_items[i].row = cJSON_IsNumber(row) ? (int)cJSON_GetNumberValue(row) : 0;
+        settings->nav_back_items[i].column = cJSON_IsNumber(column) ? (int)cJSON_GetNumberValue(column) : 0;
+        settings->nav_back_items[i].screen_x = cJSON_IsNumber(screen_x) ? (int)cJSON_GetNumberValue(screen_x) : 0;
+        settings->nav_back_items[i].screen_y = cJSON_IsNumber(screen_y) ? (int)cJSON_GetNumberValue(screen_y) : 0;
+      }
+    }
+    else {
+      settings->nav_back_items = NULL;
+    }
+  }
+  else {
+    settings->nav_back_size = 0;
+    settings->nav_back_items = NULL;
+  }
+
+  cJSON* nav_forward_array = cJSON_GetObjectItem(json, "nav_forward");
+  if (cJSON_IsArray(nav_forward_array)) {
+    settings->nav_forward_size = cJSON_GetArraySize(nav_forward_array);
+    if (settings->nav_forward_size > 0) {
+      settings->nav_forward_items = malloc(settings->nav_forward_size * sizeof(NavigationLocation));
+      for (int i = 0; i < settings->nav_forward_size; i++) {
+        cJSON* item = cJSON_GetArrayItem(nav_forward_array, i);
+        cJSON* file_path = cJSON_GetObjectItem(item, "file_path");
+        cJSON* row = cJSON_GetObjectItem(item, "row");
+        cJSON* column = cJSON_GetObjectItem(item, "column");
+        cJSON* screen_x = cJSON_GetObjectItem(item, "screen_x");
+        cJSON* screen_y = cJSON_GetObjectItem(item, "screen_y");
+
+        if (cJSON_IsString(file_path)) {
+          strncpy(settings->nav_forward_items[i].file_path, cJSON_GetStringValue(file_path),
+                  sizeof(settings->nav_forward_items[i].file_path) - 1);
+          settings->nav_forward_items[i].file_path[sizeof(settings->nav_forward_items[i].file_path) - 1] = '\0';
+        }
+        else {
+          settings->nav_forward_items[i].file_path[0] = '\0';
+        }
+        settings->nav_forward_items[i].row = cJSON_IsNumber(row) ? (int)cJSON_GetNumberValue(row) : 0;
+        settings->nav_forward_items[i].column = cJSON_IsNumber(column) ? (int)cJSON_GetNumberValue(column) : 0;
+        settings->nav_forward_items[i].screen_x = cJSON_IsNumber(screen_x) ? (int)cJSON_GetNumberValue(screen_x) : 0;
+        settings->nav_forward_items[i].screen_y = cJSON_IsNumber(screen_y) ? (int)cJSON_GetNumberValue(screen_y) : 0;
+      }
+    }
+    else {
+      settings->nav_forward_items = NULL;
+    }
+  }
+  else {
+    settings->nav_forward_size = 0;
+    settings->nav_forward_items = NULL;
+  }
 }
 
 void setupWorkspace(WorkspaceSettings* loaded_settings, int* file_count, char*** file_names, gui_Context* gui_context,

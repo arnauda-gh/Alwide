@@ -98,6 +98,7 @@ SRC_MODULES= \
 	src/advanced/intelligence/comments.c \
 	src/advanced/intelligence/indentation.c \
 	src/core/editor_context.c \
+	src/core/features/navigation_history.c \
 	src/core/editor_init.c \
 	src/core/editor_state.c \
 	src/core/editor_render.c \

@@ -61,6 +61,9 @@ int main(int file_count, char** args) {
 
   /// --- Setup Workspace Settings ---
   setupWorkspace(&workspace_settings, &ctx.file_count, &file_names, &ctx.gui_context, &ctx.current_file_index);
+  if (workspace_settings.is_used) {
+    restoreNavigationHistory(&ctx.nav_history, &workspace_settings);
+  }
 
   /// --- Setup Opened Files ---
   setupOpenedFiles(&ctx.file_count, file_names, &ctx.files);

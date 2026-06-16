@@ -40,6 +40,7 @@ static void finalizeWorkspace(EditorContext* ctx) {
     getWorkspaceSettingsForCurrentDir(&new_settings, ctx->files, ctx->file_count, ctx->current_file_index,
                                       ctx->gui_context.ofw_context.ofw_height != 0,
                                       ctx->gui_context.few_context.few_width != 0, FILE_EXPLORER_WIDTH);
+    saveNavigationHistoryToSettings(&new_settings, &ctx->nav_history);
     saveWorkspaceSettings(workspace_settings.dir_path, &new_settings);
     destroyWorkspaceSettings(&new_settings);
   }

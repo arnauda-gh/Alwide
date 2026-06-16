@@ -7,11 +7,14 @@
 #include "../../io-management/viewport_history.h"
 #include "../shared.h"
 
+struct EditorContext;
+
 typedef struct ModuleContext {
   FilesState files_state;
   ViewPort view_port;
   Cursor* cursor;
   PayloadStateChange *payload_state_change;
+  struct EditorContext* editor_context;
 } ModuleContext;
 
 

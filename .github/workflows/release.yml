@@ -7,7 +7,20 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            os: ubuntu-22.04
+            linuxdeploy_arch: x86_64
+            deb_arch: amd64
+            rpm_arch: x86_64
+          - arch: arm64
+            os: ubuntu-24.04-arm
+            linuxdeploy_arch: aarch64
+            deb_arch: arm64
+            rpm_arch: aarch64
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
 
@@ -19,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libncursesw5-dev clang
+          sudo apt-get install -y libncursesw5-dev clang || sudo apt-get install -y libncurses-dev clang
 
       - name: Cache Cargo registry and target
         uses: actions/cache@v4
@@ -30,9 +43,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             lib/**/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-
 
       - name: Install tree-sitter CLI
         run: |
@@ -49,19 +62,19 @@ jobs:
       - name: Install AppImage dependencies
         run: |
           sudo apt-get install -y libfuse2
-          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          chmod +x linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.linuxdeploy_arch }}.AppImage
+          chmod +x linuxdeploy-${{ matrix.linuxdeploy_arch }}.AppImage
 
       - name: Build AppImage
         run: |
           mkdir -p AppDir/usr/share/alwide
           cp -r assets/* AppDir/usr/share/alwide/
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir -e al -i alwide.png -d alwide.desktop --output appimage
-          mv Alwide-x86_64.AppImage alwide-x86_64.AppImage
+          ./linuxdeploy-${{ matrix.linuxdeploy_arch }}.AppImage --appdir AppDir -e al -i alwide.png -d alwide.desktop --output appimage
+          mv Alwide-${{ matrix.linuxdeploy_arch }}.AppImage alwide-${{ matrix.arch }}.AppImage
 
       - name: Install FPM
         run: |
-          sudo apt-get install -y ruby ruby-dev rubygems build-essential
+          sudo apt-get install -y ruby ruby-dev rubygems build-essential rpm
           sudo gem install --no-document fpm
 
       - name: Build .deb and .rpm packages
@@ -69,25 +82,28 @@ jobs:
           mkdir -p build_root
           make DESTDIR=./build_root PREFIX=/usr install
           VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//' | sed 's/^\.//')
-          fpm -s dir -t deb -n alwide -v "$VERSION" -p alwide-linux-amd64.deb -C build_root usr/bin usr/share
-          fpm -s dir -t rpm -n alwide -v "$VERSION" -p alwide-linux-x86_64.rpm -C build_root usr/bin usr/share
+          fpm -s dir -t deb -n alwide -v "$VERSION" -a ${{ matrix.deb_arch }} -p alwide-linux-${{ matrix.deb_arch }}.deb -C build_root usr/bin usr/share
+          fpm -s dir -t rpm -n alwide -v "$VERSION" -a ${{ matrix.rpm_arch }} -p alwide-linux-${{ matrix.rpm_arch }}.rpm -C build_root usr/bin usr/share
 
       - name: Prepare Assets
         run: |
           mkdir -p dist
           cp al dist/
-          zip -r alwide-assets.zip assets/
-          tar -czvf alwide-linux-x86_64.tar.gz -C dist al
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            zip -r alwide-assets.zip assets/
+          fi
+          tar -czvf alwide-linux-${{ matrix.arch }}.tar.gz -C dist al
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            alwide-linux-x86_64.tar.gz
+            alwide-linux-${{ matrix.arch }}.tar.gz
             alwide-assets.zip
-            alwide-x86_64.AppImage
-            alwide-linux-amd64.deb
-            alwide-linux-x86_64.rpm
+            alwide-${{ matrix.arch }}.AppImage
+            alwide-linux-${{ matrix.deb_arch }}.deb
+            alwide-linux-${{ matrix.rpm_arch }}.rpm
+          fail_on_unmatched_files: false
           draft: false
           prerelease: false
           generate_release_notes: true
