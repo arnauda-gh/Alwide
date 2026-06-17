@@ -11,7 +11,7 @@
 #include "../../utils/tools.h"
 #include "edw.h"
 #include "ofw.h"
-#include "popups/explorer_context_popup.h"
+#include "popups/few_action_popup.h"
 
 
 void gui_initFEWContext(gui_FEW* context) {

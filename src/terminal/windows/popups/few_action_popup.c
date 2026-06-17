@@ -1,4 +1,4 @@
-#include "explorer_context_popup.h"
+#include "few_action_popup.h"
 #include <dirent.h>
 #include <libgen.h>
 #include <limits.h>
@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "../../../data-management/file_management.h"
@@ -23,6 +22,12 @@
 // Types of operations
 typedef enum { EXPLORER_ACTION_NEW_FILE, EXPLORER_ACTION_NEW_FOLDER, EXPLORER_ACTION_RENAME } ExplorerActionType;
 
+typedef enum {
+  POPUP_BUTTON_NONE,
+  POPUP_BUTTON_CONFIRM,
+  POPUP_BUTTON_CANCEL
+} PopupButton;
+
 // Context Menu State
 typedef struct {
   EditorContext* ctx;
@@ -38,6 +43,7 @@ typedef struct {
   int target_file_idx;
   ExplorerActionType action_type;
   TextBuffer input_buffer;
+  PopupButton hovered_button;
 } ExplorerInputPopupState;
 
 // Delete Confirmation State
@@ -45,6 +51,7 @@ typedef struct {
   EditorContext* ctx;
   ExplorerFolder* target_folder;
   int target_file_idx;
+  PopupButton hovered_button;
 } ExplorerConfirmPopupState;
 
 // Declarations of sub-popups
@@ -361,7 +368,37 @@ static void paint_explorer_input_popup(gui_TPW* popup, void* payload) {
   mvwprintw(w, 2, 2, "Name: ");
   renderTextBuffer(w, &state->input_buffer, 8, 2, width - 10, 1);
 
-  mvwprintw(w, 4, 2, "ENTER: Confirm | ESC: Cancel");
+  // Draw Confirm Button
+  bool is_confirm_hovered = (state->hovered_button == POPUP_BUTTON_CONFIRM);
+  if (is_confirm_hovered) {
+    wattron(w, A_REVERSE | A_BOLD | COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  else {
+    wattron(w, COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  mvwprintw(w, 4, 11, "[ Confirm ]");
+  if (is_confirm_hovered) {
+    wattroff(w, A_REVERSE | A_BOLD | COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  else {
+    wattroff(w, COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+
+  // Draw Cancel Button
+  bool is_cancel_hovered = (state->hovered_button == POPUP_BUTTON_CANCEL);
+  if (is_cancel_hovered) {
+    wattron(w, A_REVERSE | A_BOLD | COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  else {
+    wattron(w, COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  mvwprintw(w, 4, 28, "[ Cancel ]");
+  if (is_cancel_hovered) {
+    wattroff(w, A_REVERSE | A_BOLD | COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  else {
+    wattroff(w, COLOR_PAIR(INFO_COLOR_PAIR));
+  }
 }
 
 static bool input_explorer_input_popup(gui_TPW* popup, int key, MEVENT* m_event, void* payload) {
@@ -373,6 +410,37 @@ static bool input_explorer_input_popup(gui_TPW* popup, int key, MEVENT* m_event,
     gui_closeTPW(&ctx->gui_context, popup);
     gui_updateGUI(&ctx->gui_context);
     return true;
+  }
+
+  if (key == H_KEY_MOUSE) {
+    int relative_y = m_event->y - getbegy(popup->tpw);
+    int relative_x = m_event->x - getbegx(popup->tpw);
+
+    PopupButton hovered = POPUP_BUTTON_NONE;
+    if (relative_y == 4) {
+      if (relative_x >= 11 && relative_x < 22) {
+        hovered = POPUP_BUTTON_CONFIRM;
+      }
+      else if (relative_x >= 28 && relative_x < 38) {
+        hovered = POPUP_BUTTON_CANCEL;
+      }
+    }
+
+    if (state->hovered_button != hovered) {
+      state->hovered_button = hovered;
+      gui_updateTPW(&ctx->gui_context);
+    }
+
+    if (hovered != POPUP_BUTTON_NONE && (m_event->bstate & (BUTTON1_CLICKED | BUTTON1_PRESSED))) {
+      if (hovered == POPUP_BUTTON_CONFIRM) {
+        execute_input_action(state);
+        gui_closeTPW(&ctx->gui_context, popup);
+      }
+      else if (hovered == POPUP_BUTTON_CANCEL) {
+        gui_closeTPW(&ctx->gui_context, popup);
+      }
+      return true;
+    }
   }
 
   if (tb_handleKey(&state->input_buffer, key, NULL)) {
@@ -402,6 +470,7 @@ static void gui_openExplorerInputPopup(EditorContext* ctx, ExplorerFolder* folde
   state->target_folder = folder;
   state->target_file_idx = file_idx;
   state->action_type = action_type;
+  state->hovered_button = POPUP_BUTTON_NONE;
 
   initTextBuffer(&state->input_buffer, &default_feature);
 
@@ -468,7 +537,37 @@ static void paint_explorer_confirm_popup(gui_TPW* popup, void* payload) {
   mvwprintw(w, 3, 2, "'%s'?", name);
   wattroff(w, A_BOLD);
 
-  mvwprintw(w, 5, 2, "ENTER: Confirm | ESC: Cancel");
+  // Draw Confirm Button
+  bool is_confirm_hovered = (state->hovered_button == POPUP_BUTTON_CONFIRM);
+  if (is_confirm_hovered) {
+    wattron(w, A_REVERSE | A_BOLD | COLOR_PAIR(WARNING_COLOR_PAIR));
+  }
+  else {
+    wattron(w, COLOR_PAIR(WARNING_COLOR_PAIR));
+  }
+  mvwprintw(w, 5, 11, "[ Confirm ]");
+  if (is_confirm_hovered) {
+    wattroff(w, A_REVERSE | A_BOLD | COLOR_PAIR(WARNING_COLOR_PAIR));
+  }
+  else {
+    wattroff(w, COLOR_PAIR(WARNING_COLOR_PAIR));
+  }
+
+  // Draw Cancel Button
+  bool is_cancel_hovered = (state->hovered_button == POPUP_BUTTON_CANCEL);
+  if (is_cancel_hovered) {
+    wattron(w, A_REVERSE | A_BOLD | COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  else {
+    wattron(w, COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  mvwprintw(w, 5, 28, "[ Cancel ]");
+  if (is_cancel_hovered) {
+    wattroff(w, A_REVERSE | A_BOLD | COLOR_PAIR(INFO_COLOR_PAIR));
+  }
+  else {
+    wattroff(w, COLOR_PAIR(INFO_COLOR_PAIR));
+  }
 }
 
 static bool input_explorer_confirm_popup(gui_TPW* popup, int key, MEVENT* m_event, void* payload) {
@@ -486,6 +585,39 @@ static bool input_explorer_confirm_popup(gui_TPW* popup, int key, MEVENT* m_even
     gui_closeTPW(&ctx->gui_context, popup);
     gui_updateGUI(&ctx->gui_context);
     return true;
+  }
+
+  if (key == H_KEY_MOUSE) {
+    int relative_y = m_event->y - getbegy(popup->tpw);
+    int relative_x = m_event->x - getbegx(popup->tpw);
+
+    PopupButton hovered = POPUP_BUTTON_NONE;
+    if (relative_y == 5) {
+      if (relative_x >= 11 && relative_x < 22) {
+        hovered = POPUP_BUTTON_CONFIRM;
+      }
+      else if (relative_x >= 28 && relative_x < 38) {
+        hovered = POPUP_BUTTON_CANCEL;
+      }
+    }
+
+    if (state->hovered_button != hovered) {
+      state->hovered_button = hovered;
+      gui_updateGUI(&ctx->gui_context);
+    }
+
+    if (hovered != POPUP_BUTTON_NONE && (m_event->bstate & (BUTTON1_CLICKED | BUTTON1_PRESSED))) {
+      if (hovered == POPUP_BUTTON_CONFIRM) {
+        execute_delete_action(state);
+        gui_closeTPW(&ctx->gui_context, popup);
+        gui_updateGUI(&ctx->gui_context);
+      }
+      else if (hovered == POPUP_BUTTON_CANCEL) {
+        gui_closeTPW(&ctx->gui_context, popup);
+        gui_updateGUI(&ctx->gui_context);
+      }
+      return true;
+    }
   }
 
   return true;
@@ -507,6 +639,7 @@ static void gui_openExplorerConfirmPopup(EditorContext* ctx, ExplorerFolder* fol
   state->ctx = ctx;
   state->target_folder = folder;
   state->target_file_idx = file_idx;
+  state->hovered_button = POPUP_BUTTON_NONE;
 
   gui_showTPWPositioned(&ctx->gui_context, 7, 50, GUI_TPW_POS_CENTER, paint_explorer_confirm_popup,
                         input_explorer_confirm_popup, destroy_explorer_confirm_popup, state);

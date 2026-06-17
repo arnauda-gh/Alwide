@@ -14,7 +14,7 @@
 #include "term_handler.h"
 #include "windows/edw.h"
 #include "windows/few.h"
-#include "windows/popups/explorer_context_popup.h"
+#include "windows/popups/few_action_popup.h"
 #include "windows/popups/language_popup.h"
 #include "windows/pow.h"
 #include "windows/tpw.h"
