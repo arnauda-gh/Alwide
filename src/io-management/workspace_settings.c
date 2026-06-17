@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/ttydefaults.h>
 #include "../environnement/constants.h"
+#include "../terminal/windows/few.h"
 
 
 void getWorkspaceSettingsForCurrentDir(WorkspaceSettings* settings, FileContainer* files, int file_count,
@@ -309,7 +310,8 @@ void setupWorkspace(WorkspaceSettings* loaded_settings, int* file_count, char***
 
         // File Explorer Window state.
         if (loaded_settings->showing_file_explorer_window == true) {
-          ungetch(CTRL('e'));
+          gui_switchFEW(gui_context);
+          gui_context->focused_panel = PANEL_EDITOR;
         }
       }
     }

@@ -25,9 +25,10 @@ gui_TPW* gui_createToplevelPopup(gui_Context* gui_context, int y, int x, int hei
   tpw_context->expiry_time = 0;
   tpw_context->next = NULL;
   tpw_context->strong_focus = true;
+  tpw_context->closable = true;
 
   // Prepend to the linked list
-  gui_addNewTPW(gui_context, tpw_context);
+  gui_showTPW(gui_context, tpw_context);
 
   // Set focus on creation
   gui_updateTPW(gui_context);
@@ -46,6 +47,7 @@ static void gui_repaintTPW_recursive(gui_TPW* popup) {
   if (popup == NULL) {
     return;
   }
+  fprintf(stderr, "print TPW\n");
   // Paint the rest of the list first (older popups)
   gui_repaintTPW_recursive(popup->next);
 
@@ -58,11 +60,14 @@ static void gui_repaintTPW_recursive(gui_TPW* popup) {
   }
 }
 
-void gui_repaintTPW(gui_Context* gui_context) { gui_repaintTPW_recursive(gui_context->toplevel_popups); }
+void gui_repaintTPW(gui_Context* gui_context) {
+  gui_context->refresh_tpw = false;
+  gui_repaintTPW_recursive(gui_context->toplevel_popups);
+}
 
 void gui_updateTPW(gui_Context* gui_context) { gui_context->refresh_tpw = true; }
 
-void gui_destroyToplevelPopup(gui_Context* gui_context, gui_TPW* popup) {
+void gui_closeTPW(gui_Context* gui_context, gui_TPW* popup) {
   if (!popup) {
     return;
   }
@@ -99,13 +104,13 @@ void gui_destroyToplevelPopup(gui_Context* gui_context, gui_TPW* popup) {
   gui_updateGUI(gui_context);
 }
 
-void gui_destroyAllToplevelPopups(gui_Context* gui_context) {
+void gui_closeAllTPW(gui_Context* gui_context) {
   while (gui_context->toplevel_popups != NULL) {
-    gui_destroyToplevelPopup(gui_context, gui_context->toplevel_popups);
+    gui_closeTPW(gui_context, gui_context->toplevel_popups);
   }
 }
 
-void gui_setToplevelPopupFocus(gui_Context* gui_context, gui_TPW* popup) {
+void gui_setTPWFocus(gui_Context* gui_context, gui_TPW* popup) {
   if (!popup) {
     gui_updateTPW(gui_context);
     return;
@@ -130,7 +135,7 @@ void gui_setToplevelPopupFocus(gui_Context* gui_context, gui_TPW* popup) {
   gui_updateTPW(gui_context);
 }
 
-void gui_addNewTPW(gui_Context* gui_context, gui_TPW* popup) {
+void gui_showTPW(gui_Context* gui_context, gui_TPW* popup) {
   if (!popup) {
     return;
   }
@@ -146,14 +151,6 @@ void gui_setTPWVisibility(gui_Context* gui_context, gui_TPW* popup, bool visible
   gui_updateTPW(gui_context);
 }
 
-void gui_setTPWFocus(gui_Context* gui_context, gui_TPW* popup, bool has_focus) {
-  if (!popup) {
-    return;
-  }
-  if (has_focus) {
-    gui_setToplevelPopupFocus(gui_context, popup);
-  }
-}
 
 void gui_setTPWStrongFocus(gui_Context* gui_context, gui_TPW* popup, bool strong_focus) {
   if (!popup) {
@@ -251,9 +248,9 @@ void gui_calculateTPWPosition(gui_Context* gui_context, int height, int width, g
   }
 }
 
-gui_TPW* gui_createToplevelPopupPositioned(gui_Context* gui_context, int height, int width, gui_TPW_Position position,
-                                           gui_TPW_paintCallback paint_cb, gui_TPW_inputCallback input_cb,
-                                           gui_TPW_destroyCallback destroy_cb, void* payload) {
+gui_TPW* gui_showTPWPositioned(gui_Context* gui_context, int height, int width, gui_TPW_Position position,
+                               gui_TPW_paintCallback paint_cb, gui_TPW_inputCallback input_cb,
+                               gui_TPW_destroyCallback destroy_cb, void* payload) {
   int y = 0, x = 0;
   gui_calculateTPWPosition(gui_context, height, width, position, &y, &x);
   return gui_createToplevelPopup(gui_context, y, x, height, width, paint_cb, input_cb, destroy_cb, payload);

@@ -101,7 +101,7 @@ static void perform_navigation_jump(struct EditorContext* ctx, NavigationLocatio
   ctx->refresh_local_vars = true;
   gui_updateOFW(&ctx->gui_context);
   gui_updateEDW(&ctx->gui_context);
-  gui_closePopup(&ctx->gui_context);
+  gui_closeEDWPopup(&ctx->gui_context);
 }
 
 void navigateBack(struct EditorContext* ctx) {

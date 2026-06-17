@@ -25,7 +25,7 @@ void receiveCodeActionData(cJSON* packet, FileContainer* file, ModuleContext* da
     // if there is no data we close the popup
     if (computed->completions.completions.size == 0) {
       if (data->view_port.gui->edw_context.pow_owner == COMPLETION) {
-        gui_closePopup(data->view_port.gui);
+        gui_closeEDWPopup(data->view_port.gui);
       }
     }
     return;

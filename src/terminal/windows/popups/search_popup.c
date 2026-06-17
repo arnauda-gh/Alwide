@@ -92,14 +92,6 @@ static bool input_search_popup(gui_TPW* popup, int key, MEVENT* m_event, void* p
   SearchPopupContext* state = (SearchPopupContext*)payload;
   FileContainer* fc = &state->ctx->files[state->ctx->current_file_index];
 
-  // 1. ESC: Exit search
-  if (key == H_KEY_ESCAPE || key == K_SPECIAL(K_MOD_CTRL, '[')) {
-    EditorContext* ctx = state->ctx;
-    gui_destroyToplevelPopup(&ctx->gui_context, popup);
-    gui_updateGUI(&ctx->gui_context);
-    return true;
-  }
-
   // 2. Ctrl+G: Toggle Case Sensitivity
   if (key == K_SPECIAL(K_MOD_CTRL, 'g')) {
     state->case_sensitive = !state->case_sensitive;
@@ -196,7 +188,7 @@ void gui_openSearchPopup(EditorContext* ctx, char* query) {
   state->initial_cursor = fc->cursor;
 
   // Position at the bottom-right corner: height=5, width=50
-  gui_createToplevelPopupPositioned(&ctx->gui_context, 5, 50, GUI_TPW_POS_BOTTOM_RIGHT, paint_search_popup,
+  gui_showTPWPositioned(&ctx->gui_context, 5, 50, GUI_TPW_POS_BOTTOM_RIGHT, paint_search_popup,
                                     input_search_popup, destroy_search_popup, state);
   gui_updateGUI(&ctx->gui_context);
 }

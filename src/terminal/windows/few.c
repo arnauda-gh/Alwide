@@ -3,10 +3,15 @@
 #include <libgen.h>
 #include <ncurses.h>
 
+#include "../../core/editor_context.h"
+#include "../../data-management/file_management.h"
 #include "../../environnement/constants.h"
+#include "../../terminal/click_handler.h"
+#include "../../terminal/key_management.h"
 #include "../../utils/tools.h"
 #include "edw.h"
 #include "ofw.h"
+#include "popups/few_action_popup.h"
 
 
 void gui_initFEWContext(gui_FEW* context) {
@@ -52,6 +57,7 @@ void gui_switchFEW(gui_Context* gui_context) {
     gui_context->few_context.few = newwin(0, gui_context->few_context.few_width, 0, 0);
     gui_context->few_context.refresh_few = true;
     wbkgd(gui_context->few_context.few, COLOR_PAIR(DEFAULT_COLOR_PAIR));
+    gui_context->focused_panel = PANEL_FILE_EXPLORER;
   }
   else {
     // Close File Explorer Window
@@ -59,6 +65,7 @@ void gui_switchFEW(gui_Context* gui_context) {
     delwin(gui_context->few_context.few);
     gui_context->few_context.few = NULL;
     gui_context->few_context.few_width = 0;
+    gui_context->focused_panel = PANEL_EDITOR;
   }
   // Resize Opened File Window
   gui_resizeOFW(gui_context);
@@ -67,8 +74,11 @@ void gui_switchFEW(gui_Context* gui_context) {
 }
 
 
+
+#define SELECTED_ATTRIBUTE (A_STANDOUT | A_DIM)
+
 void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_offset, int* few_y_offset,
-                              int tree_offset_rec, int* selected_line) {
+                              int tree_offset_rec, int* selected_line, bool is_focused) {
   // Don't print if not in window.
   if (getcury(few) + 1 >= getmaxy(few)) {
     return;
@@ -83,7 +93,12 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
     // Print current folder name
 
     if (*selected_line == 0) {
-      wattron(few, A_STANDOUT);
+      if (is_focused) {
+        wattron(few, A_STANDOUT);
+      }
+      else {
+        wattron(few, SELECTED_ATTRIBUTE);
+      }
     }
 
     for (int i = 0; i < tree_offset_rec && i < getmaxx(few); i++) {
@@ -104,7 +119,12 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
       for (int j = getcurx(few) + 1; j < getmaxx(few); j++) {
         printToNcursesNCharFromString(few, " ", getmaxx(few) - (getcurx(few) + 1));
       }
-      wattroff(few, A_STANDOUT);
+      if (is_focused) {
+        wattroff(few, A_STANDOUT);
+      }
+      else {
+        wattroff(few, SELECTED_ATTRIBUTE);
+      }
     }
     wprintw(few, "\n");
   }
@@ -119,7 +139,7 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
   // Print sub folders
   for (int i = 0; i < folder->folder_count; i++) {
     internalPrintExplorerRec(folder->folders + i, few, few_x_offset, few_y_offset,
-                             tree_offset_rec + FILE_EXPLORER_TREE_OFFSET, selected_line);
+                             tree_offset_rec + FILE_EXPLORER_TREE_OFFSET, selected_line, is_focused);
   }
   // Print sub files
   for (int i = 0; i < folder->file_count; i++) {
@@ -132,7 +152,12 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
     if (*few_y_offset == 0) {
       // Print file name
       if (*selected_line == 0) {
-        wattron(few, A_STANDOUT);
+        if (is_focused) {
+          wattron(few, A_STANDOUT);
+        }
+        else {
+          wattron(few, SELECTED_ATTRIBUTE);
+        }
       }
       for (int j = 0;
            j < tree_offset_rec + FILE_EXPLORER_TREE_OFFSET + 1 /*Add one to balance with the folder decoration*/; j++) {
@@ -144,7 +169,12 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
         for (int j = getcurx(few) + 1; j < getmaxx(few); j++) {
           printToNcursesNCharFromString(few, " ", getmaxx(few) - (getcurx(few) + 1));
         }
-        wattroff(few, A_STANDOUT);
+        if (is_focused) {
+          wattroff(few, A_STANDOUT);
+        }
+        else {
+          wattroff(few, SELECTED_ATTRIBUTE);
+        }
       }
       wprintw(few, "\n");
     }
@@ -154,10 +184,11 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
   }
 }
 
-void gui_repaintFEW(gui_FEW* context, ExplorerFolder* pwd) {
+void gui_repaintFEW(gui_FEW* context, ExplorerFolder* pwd, bool is_focused) {
   if (!(context->refresh_few == true && context->few_width != 0 && context->few != NULL)) {
     return;
   }
+  fprintf(stderr, "print FEW\n");
   werase(context->few);
   wmove(context->few, 0, 0);
 
@@ -166,7 +197,8 @@ void gui_repaintFEW(gui_FEW* context, ExplorerFolder* pwd) {
   int tmp_few_x_offset = context->few_x_offset;
   int tmp_few_y_offset = context->few_y_offset;
   int tmp_few_selected_line = context->few_selected_line;
-  internalPrintExplorerRec(pwd, context->few, &tmp_few_x_offset, &tmp_few_y_offset, 0, &tmp_few_selected_line);
+  internalPrintExplorerRec(pwd, context->few, &tmp_few_x_offset, &tmp_few_y_offset, 0, &tmp_few_selected_line,
+                           is_focused);
   // Clear end of window
 
   for (int i = getbegy(context->few); i < getmaxy(context->few); i++) {
@@ -175,4 +207,159 @@ void gui_repaintFEW(gui_FEW* context, ExplorerFolder* pwd) {
 
   wnoutrefresh(context->few);
   context->refresh_few = false;
+}
+
+static int count_total_explorer_lines(ExplorerFolder* folder) {
+  int count = 1; // for the folder itself
+  if (!folder->open) {
+    return count;
+  }
+  for (int i = 0; i < folder->folder_count; i++) {
+    count += count_total_explorer_lines(&folder->folders[i]);
+  }
+  count += folder->file_count;
+  return count;
+}
+
+bool gui_handleFEWKeyboardInput(void* ctx_void, int key) {
+  EditorContext* ctx = (EditorContext*)ctx_void;
+  if (ctx->gui_context.focused_panel != PANEL_FILE_EXPLORER) {
+    return false;
+  }
+
+  gui_FEW* few = &ctx->gui_context.few_context;
+
+  if (few->few_selected_line == -1) {
+    few->few_selected_line = 1;
+  }
+
+  int total_lines = count_total_explorer_lines(&ctx->pwd);
+
+  switch (key) {
+    case H_KEY_UP:
+    case 'k':
+      if (few->few_selected_line > 1) {
+        few->few_selected_line--;
+        if (few->few_selected_line - 1 < few->few_y_offset) {
+          few->few_y_offset = few->few_selected_line - 1;
+        }
+        gui_updateFEW(&ctx->gui_context);
+      }
+      return true;
+
+    case H_KEY_DOWN:
+    case 'j':
+      if (few->few_selected_line < total_lines) {
+        few->few_selected_line++;
+        int view_height = getmaxy(few->few);
+        if (few->few_selected_line - few->few_y_offset > view_height) {
+          few->few_y_offset++;
+        }
+        gui_updateFEW(&ctx->gui_context);
+      }
+      return true;
+    case H_KEY_LEFT:
+    case 'h':
+      {
+        ExplorerFolder* res_folder;
+        int res_index;
+        if (getFileClickedFileExplorer(&ctx->pwd, few->few_selected_line - 1, 0, 0, &res_folder, &res_index)) {
+          if (res_index == -1) {
+            if (res_folder->open) {
+              res_folder->open = false;
+              gui_updateFEW(&ctx->gui_context);
+            }
+          }
+        }
+        return true;
+      }
+
+    case H_KEY_RIGHT:
+    case 'l':
+      {
+        ExplorerFolder* res_folder;
+        int res_index;
+        if (getFileClickedFileExplorer(&ctx->pwd, few->few_selected_line - 1, 0, 0, &res_folder, &res_index)) {
+          if (res_index == -1) {
+            if (!res_folder->open) {
+              res_folder->open = true;
+              gui_updateFEW(&ctx->gui_context);
+            }
+          }
+        }
+        return true;
+      }
+
+    case H_KEY_ENTER:
+    case ' ':
+    case K_SPECIAL(0, '\r'):
+      {
+        ExplorerFolder* res_folder;
+        int res_index;
+        if (getFileClickedFileExplorer(&ctx->pwd, few->few_selected_line - 1, 0, 0, &res_folder, &res_index)) {
+          if (res_index == -1) {
+            res_folder->open = !res_folder->open;
+          }
+          else {
+            openNewFile(res_folder->files[res_index].path, &ctx->files, &ctx->file_count, &ctx->current_file_index,
+                        &ctx->gui_context.ofw_context.refresh_ofw, &ctx->refresh_local_vars);
+            ctx->gui_context.focused_panel = PANEL_EDITOR;
+          }
+          gui_updateGUI(&ctx->gui_context);
+        }
+        return true;
+      }
+
+    // CRUD Keybinds
+    case K_SPECIAL(K_MOD_CTRL, KEY_ENTER):
+    case 'a':
+      {
+        ExplorerFolder* res_folder;
+        int res_index;
+        if (getFileClickedFileExplorer(&ctx->pwd, few->few_selected_line - 1, 0, 0, &res_folder, &res_index)) {
+          gui_openExplorerContextPopup(ctx, few->few_selected_line - few->few_y_offset, few->few_width / 2, res_folder,
+                                       res_index);
+        }
+        return true;
+      }
+
+    case 'r':
+      {
+        ExplorerFolder* res_folder;
+        int res_index;
+        if (getFileClickedFileExplorer(&ctx->pwd, few->few_selected_line - 1, 0, 0, &res_folder, &res_index)) {
+          gui_openExplorerContextPopup(ctx, few->few_selected_line - few->few_y_offset, few->few_width / 2, res_folder,
+                                       res_index);
+        }
+        return true;
+      }
+
+    case 'x':
+    case K_SPECIAL(0, KEY_DC):
+      { // delete key
+        ExplorerFolder* res_folder;
+        int res_index;
+        if (getFileClickedFileExplorer(&ctx->pwd, few->few_selected_line - 1, 0, 0, &res_folder, &res_index)) {
+          gui_openExplorerContextPopup(ctx, few->few_selected_line - few->few_y_offset, few->few_width / 2, res_folder,
+                                       res_index);
+        }
+        return true;
+      }
+
+    case 'R':
+    case K_SPECIAL(0, KEY_F(5)):
+      reloadFolder(&ctx->pwd);
+      gui_updateFEW(&ctx->gui_context);
+      return true;
+
+    case H_KEY_ESCAPE:
+      ctx->gui_context.focused_panel = PANEL_EDITOR;
+      gui_updateGUI(&ctx->gui_context);
+      return true;
+
+    case H_KEY_MOUSE:
+      return false;
+  }
+
+  return true;
 }

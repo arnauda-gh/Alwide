@@ -39,10 +39,9 @@ static void paint_quit_popup(gui_TPW* popup, void* payload) {
 static bool input_quit_popup(gui_TPW* popup, int key, MEVENT* m_event, void* payload) {
   EditorContext* ctx = (EditorContext*)payload;
 
-  // ESC: Close popup and return to editor
-  if (key == H_KEY_ESCAPE || key == K_SPECIAL(K_MOD_CTRL, '[')) {
-    gui_destroyToplevelPopup(&ctx->gui_context, popup);
-    gui_updateGUI(&ctx->gui_context);
+  // q : quit
+  if (key == 'q') {
+    gui_closeTPW(&ctx->gui_context, popup);
     return true;
   }
 
@@ -58,7 +57,7 @@ static bool input_quit_popup(gui_TPW* popup, int key, MEVENT* m_event, void* pay
       }
     }
     ctx->force_quit = true;
-    gui_destroyToplevelPopup(&ctx->gui_context, popup);
+    gui_closeTPW(&ctx->gui_context, popup);
     gui_updateGUI(&ctx->gui_context);
     return true;
   }
@@ -66,7 +65,7 @@ static bool input_quit_popup(gui_TPW* popup, int key, MEVENT* m_event, void* pay
   // Ctrl+Q: Quit without saving
   if (key == K_SPECIAL(K_MOD_CTRL, 'q')) {
     ctx->force_quit = true;
-    gui_destroyToplevelPopup(&ctx->gui_context, popup);
+    gui_closeTPW(&ctx->gui_context, popup);
     gui_updateGUI(&ctx->gui_context);
     return true;
   }
@@ -86,7 +85,7 @@ void gui_openQuitPopup(EditorContext* ctx) {
   }
 
   // Position at center: height=6, width=62
-  gui_TPW* popup = gui_createToplevelPopupPositioned(&ctx->gui_context, 6, 62, GUI_TPW_POS_CENTER,
+  gui_TPW* popup = gui_showTPWPositioned(&ctx->gui_context, 6, 62, GUI_TPW_POS_CENTER,
                                                      paint_quit_popup, input_quit_popup,
                                                      destroy_quit_popup, ctx);
   if (popup) {
