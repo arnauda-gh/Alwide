@@ -17,7 +17,6 @@
 #include "../term_handler.h"
 #include "gui_entities.h"
 #include "pow.h"
-#include "tpw.h"
 
 void gui_initEDWContext(gui_EDW* context) {
   context->ftw = NULL; // File Text Window
@@ -268,13 +267,13 @@ void move_physical_cursor(gui_EDW* context, Cursor cursor, int screen_x, int scr
 }
 
 
-void gui_repaintEDW(gui_EDW* context, Cursor cursor, Cursor select_cursor, int screen_x, int screen_y,
-                    WindowHighlightDescriptor* highlight_descriptor, LSP_ComputedData* lsp_data, int tab_size) {
+void gui_repaintEDW(gui_EDW* context, FileContainer* fc, WindowHighlightDescriptor* highlight_descriptor) {
   if (!context->refresh_edw) {
     return;
   }
+  fprintf(stderr, "print EDW\n");
   wmove(context->ftw, 0, 0);
-  FileIdentifier file_cur = cursor.file_id;
+  FileIdentifier file_cur = fc->cursor.file_id;
 
   const int line_count = getmaxy(context->ftw);
   const int column_count = getmaxx(context->ftw);
@@ -282,14 +281,14 @@ void gui_repaintEDW(gui_EDW* context, Cursor cursor, Cursor select_cursor, int s
 
   // ===============  FOR EACH LINE  ===============
   int whd_offset = 0;
-  for (int row = screen_y; row < screen_y + line_count; row++) {
+  for (int row = fc->screen_y; row < fc->screen_y + line_count; row++) {
     // getting the row to print.
     file_cur = tryToReachAbsRow(file_cur, row);
 
     // if the row is couldn't be reached skip it.
     if (file_cur.absolute_row != row) {
       // show empty line number.
-      wmove(context->lnw, row - screen_y, 0);
+      wmove(context->lnw, row - fc->screen_y, 0);
       for (int i = 0; i < getmaxx(context->lnw); i++) {
         wprintw(context->lnw, " ");
       }
@@ -302,18 +301,18 @@ void gui_repaintEDW(gui_EDW* context, Cursor cursor, Cursor select_cursor, int s
     }
 
     // ===============  Print line number  ===============
-    printEditor_printLineNumber(context, cursor, screen_y, file_cur, row, highlight_descriptor, whd_offset);
+    printEditor_printLineNumber(context, fc->cursor, fc->screen_y, file_cur, row, highlight_descriptor, whd_offset);
 
 
     // ===============  Print File Content  ===============
-    printEditor_printFileContent(context, cursor, select_cursor, screen_x, highlight_descriptor, file_cur, column_count,
-                                 &whd_offset, tab_size);
+    printEditor_printFileContent(context, fc->cursor, fc->select_cursor, fc->screen_x, highlight_descriptor, file_cur,
+                                 column_count, &whd_offset, LF_tab_size(fc->feature));
   }
 
   // ===============  Print Cursor  ===============
 #ifdef SIMULATED_CURSOR
-  printEditor_printCursor(context, cursor, screen_x, screen_y, highlight_descriptor, line_count, column_count,
-                          tab_size);
+  printEditor_printCursor(context, fc->cursor, fc->screen_x, fc->screen_y, highlight_descriptor, line_count,
+                          column_count, LF_tab_size(fc->feature));
 #else
   move_physical_cursor(context, cursor, screen_x, screen_y, line_count, column_count, tab_size);
 #endif
@@ -323,16 +322,18 @@ void gui_repaintEDW(gui_EDW* context, Cursor cursor, Cursor select_cursor, int s
 
   if (context->show_pow) {
     assert(context->pow != NULL);
-    gui_printPopup(context, &cursor, lsp_data, tab_size);
+    gui_printPopup(context, &fc->cursor, fc->lsp_datas.computed, LF_tab_size(fc->feature));
     wnoutrefresh(context->pow);
   }
+
+  gui_repaintSBW(context, fc);
 
   context->refresh_edw = false;
 }
 
 int getEDW_LengthLineNumber(gui_Context* gui_context) { return gui_context->edw_context.length_line_number; }
 
-bool gui_showPopup(gui_Context* gui_context, int y, int x, int height, int width, PopupOwner owner) {
+bool gui_showEDWPopup(gui_Context* gui_context, int y, int x, int height, int width, PopupOwner owner) {
   delwin(gui_context->edw_context.pow);
   gui_context->edw_context.pow = newwin(height, width, y - height + getbegy(gui_context->edw_context.ftw),
                                         x + getbegx(gui_context->edw_context.ftw) + 2);
@@ -346,7 +347,7 @@ bool gui_showPopup(gui_Context* gui_context, int y, int x, int height, int width
   return gui_context->edw_context.show_pow;
 }
 
-bool gui_adaptPopup(gui_Context* gui_context, int slice_x, int slice_y) {
+bool gui_adaptEDWPopup(gui_Context* gui_context, int slice_x, int slice_y) {
   if (gui_context->edw_context.pow == NULL) {
     return false;
   }
@@ -384,7 +385,7 @@ bool gui_adaptPopup(gui_Context* gui_context, int slice_x, int slice_y) {
   return gui_context->edw_context.show_pow;
 }
 
-void gui_closePopup(gui_Context* gui_context) {
+void gui_closeEDWPopup(gui_Context* gui_context) {
   gui_context->edw_context.show_pow = false;
   gui_context->edw_context.pow_owner = NO_OWNER;
   gui_updateEDW(gui_context);

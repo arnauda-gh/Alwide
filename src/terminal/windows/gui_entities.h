@@ -18,6 +18,7 @@ struct gui_TPW {
   int width;         // Window width
   bool visible;      // Is the popup currently displayed
   bool strong_focus; // Does the popup need to be closed to allow lower level to get input.
+  bool closable;     // Does the popup can be closed from any close input (esc or click outside of the popup).
 
   gui_TPW_paintCallback on_paint;     // Paint callback
   gui_TPW_inputCallback on_input;     // Input handler callback
@@ -97,6 +98,8 @@ struct Notification {
   Notification* next;
 };
 
+typedef enum { PANEL_EDITOR, PANEL_FILE_EXPLORER } FocusedPanel;
+
 struct gui_Context {
   // Init GUI vars
   gui_EDW edw_context; // Editor Window Context
@@ -105,6 +108,9 @@ struct gui_Context {
 
   // Used to set the window where start mouse drag
   WINDOW* focus_w;
+
+  // Track active keyboard focus panel
+  FocusedPanel focused_panel;
 
   // Toplevel popup list head
   gui_TPW* toplevel_popups;

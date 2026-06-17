@@ -47,8 +47,6 @@ EventLoopAction dispatchInput(EditorContext* ctx, int key) {
   bool valid_prev = getActiveNavigationLocation(ctx, &prev_loc);
 
 
-
-
   // Dispatcher pipeline fallback.
   EventLoopAction ret_action = EVENT_READ_INPUT;
 
@@ -58,6 +56,9 @@ EventLoopAction dispatchInput(EditorContext* ctx, int key) {
   }
   else if (handlePopupInput(ctx, key)) {
     ret_action = ctx->force_quit ? EVENT_QUIT : EVENT_READ_INPUT;
+  }
+  else if (gui_handleFEWKeyboardInput(ctx, key)) {
+    ret_action = EVENT_READ_INPUT;
   }
   else if (K_IS_SPECIAL(key)) {
     ret_action = runSpecialKeyHandler(ctx, key);
@@ -320,7 +321,7 @@ void handleCharInsertion(EditorContext* ctx, int key) {
   setDesiredColumn(*cursor, desired_column);
 
   if (ctx->gui_context.edw_context.pow_owner == DIAGNOSTICS) {
-    gui_closePopup(&ctx->gui_context);
+    gui_closeEDWPopup(&ctx->gui_context);
   }
 
   ModuleContext lsp_ctx = buildModuleContext(ctx);
@@ -367,7 +368,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
         *cursor = moveRight(*cursor);
         if (areChar_U8Equals(getCharAtCursor(*cursor), readChar_U8FromCharArray(")")) &&
             ctx->gui_context.edw_context.pow_owner == SIGNATURE_HELP) {
-          gui_closePopup(&ctx->gui_context);
+          gui_closeEDWPopup(&ctx->gui_context);
         }
       }
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_RIGHT);
@@ -379,7 +380,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       if (cursor_is_disabled(*select_cursor)) {
         if (areChar_U8Equals(getCharAtCursor(*cursor), readChar_U8FromCharArray("(")) &&
             ctx->gui_context.edw_context.pow_owner == SIGNATURE_HELP) {
-          gui_closePopup(&ctx->gui_context);
+          gui_closeEDWPopup(&ctx->gui_context);
         }
         *cursor = moveLeft(*cursor);
       }
@@ -391,13 +392,13 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
     case H_KEY_UP:
       *cursor = moveUp(*cursor, *desired_column);
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_LEFT);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'n'):
     case H_KEY_DOWN:
       *cursor = moveDown(*cursor, *desired_column);
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_RIGHT);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case K_SPECIAL(K_MOD_CTRL | K_MOD_SHIFT, 'k'):
     case H_KEY_MAJ_RIGHT:
@@ -415,20 +416,20 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
     case H_KEY_MAJ_UP:
       setSelectCursorOn(*cursor, select_cursor);
       *cursor = moveUp(*cursor, *desired_column);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case K_SPECIAL(K_MOD_CTRL | K_MOD_SHIFT, 'n'):
     case H_KEY_MAJ_DOWN:
       setSelectCursorOn(*cursor, select_cursor);
       *cursor = moveDown(*cursor, *desired_column);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case H_KEY_CTRL_RIGHT:
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_RIGHT);
       *cursor = moveToNextWord(*cursor);
       if (areChar_U8Equals(getCharAtCursor(*cursor), readChar_U8FromCharArray(")")) &&
           ctx->gui_context.edw_context.pow_owner == SIGNATURE_HELP) {
-        gui_closePopup(&ctx->gui_context);
+        gui_closeEDWPopup(&ctx->gui_context);
       }
       setDesiredColumn(*cursor, desired_column);
       askCompletion(&ctx->gui_context, fc, true, false);
@@ -437,7 +438,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_LEFT);
       if (areChar_U8Equals(getCharAtCursor(*cursor), readChar_U8FromCharArray("(")) &&
           ctx->gui_context.edw_context.pow_owner == SIGNATURE_HELP) {
-        gui_closePopup(&ctx->gui_context);
+        gui_closeEDWPopup(&ctx->gui_context);
       }
       *cursor = moveToPreviousWord(*cursor);
       setDesiredColumn(*cursor, desired_column);
@@ -463,7 +464,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       }
       ctx->refresh_local_vars = true;
       gui_updateOFW(&ctx->gui_context);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case H_KEY_CTRL_MAJ_UP:
       if (ctx->current_file_index != ctx->file_count - 1) {
@@ -471,7 +472,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       }
       ctx->refresh_local_vars = true;
       gui_updateOFW(&ctx->gui_context);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'r'):
       askFormatting(fc);
@@ -487,7 +488,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_LEFT);
       *cursor = moveToPreviousWord(*cursor);
       setDesiredColumn(*cursor, desired_column);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case H_KEY_CTRL_SEMICOLON:
     case H_KEY_END:
@@ -499,7 +500,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       setSelectCursorOn(*cursor, select_cursor);
       *cursor = goToEnd(*cursor);
       setDesiredColumn(*cursor, desired_column);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'z'):
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_LEFT);
@@ -575,6 +576,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
         waitForLspResponse(ctx, 200);
       }
       if (saveFileContainer(fc)) {
+        gui_updateEDW(&ctx->gui_context);
         notifyUser(ctx, LOG_INFO, "File saved successfully.");
       }
       else {
@@ -603,7 +605,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
     case H_KEY_SHIFT_ENTER:
       *cursor = goToEnd(*cursor);
     case H_KEY_ENTER:
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       deleteSelectionWithState(history_frame, cursor, select_cursor, &ctx->payload_state_change);
       tmp = cursor_to_desc(*cursor);
       *cursor = insertNewLineInLineC(*cursor);
@@ -673,7 +675,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       }
       deleteSelectionWithState(history_frame, cursor, select_cursor, &ctx->payload_state_change);
       setDesiredColumn(*cursor, desired_column);
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       gui_updateEDW(&ctx->gui_context);
       break;
     case K_SPECIAL(K_MOD_CTRL, 'e'):
@@ -691,7 +693,7 @@ EventLoopAction runSpecialKeyHandler(EditorContext* ctx, int key) {
       break;
     case H_KEY_ESCAPE:
     case K_SPECIAL(K_MOD_CTRL, '['):
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
       setSelectCursorOff(cursor, select_cursor, SELECT_OFF_RIGHT);
       break;
     default:

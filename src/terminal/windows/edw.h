@@ -10,8 +10,7 @@ void gui_initEDWContext(gui_EDW* context);
 
 void gui_resizeEDW(gui_Context* gui_context, int lnw_new_width);
 
-void gui_repaintEDW(gui_EDW* context, Cursor cursor, Cursor select_cursor, int screen_x, int screen_y,
-                    WindowHighlightDescriptor* highlight_descriptor, LSP_ComputedData* lsp_data, int tab_size);
+void gui_repaintEDW(gui_EDW* context, FileContainer* fc, WindowHighlightDescriptor* highlight_descriptor);
 
 void gui_repaintSBW(gui_EDW* context, FileContainer* fc);
 
@@ -19,10 +18,10 @@ void gui_switchSBW(gui_Context* gui_context);
 
 int getEDW_LengthLineNumber(gui_Context* gui_context);
 
-bool gui_showPopup(gui_Context* gui_context, int y, int x, int height, int width, PopupOwner owner);
+bool gui_showEDWPopup(gui_Context* gui_context, int y, int x, int height, int width, PopupOwner owner);
 
-void gui_closePopup(gui_Context* gui_context);
+void gui_closeEDWPopup(gui_Context* gui_context);
 
-bool gui_adaptPopup(gui_Context* gui_context, int slice_x, int slice_y);
+bool gui_adaptEDWPopup(gui_Context* gui_context, int slice_x, int slice_y);
 
 #endif // WISHWIM_FTW_H

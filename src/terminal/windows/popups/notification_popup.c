@@ -231,7 +231,7 @@ void gui_checkNotificationsExpiry(gui_Context* gui_context) {
   while (curr) {
     gui_TPW* next = curr->next;
     if (curr->expiry_time > 0 && now > curr->expiry_time) {
-      gui_destroyToplevelPopup(gui_context, curr);
+      gui_closeTPW(gui_context, curr);
     }
     curr = next;
   }

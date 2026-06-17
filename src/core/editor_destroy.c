@@ -76,7 +76,7 @@ static void finalizeGlobalSystems() {
 }
 
 void finalizeEditor(EditorContext* ctx) {
-  gui_destroyAllToplevelPopups(&ctx->gui_context);
+  gui_closeAllTPW(&ctx->gui_context);
   finalizeWorkspace(ctx);
   finalizeFileData(ctx);
   finalizeGlobalSystems();

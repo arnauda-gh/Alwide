@@ -90,7 +90,7 @@ void askCompletion(gui_Context* gui_context, FileContainer* fc, bool reset, bool
     // if it's not a force don't auto trigger if it's not before a word.
     if (!force && !isAfterAWord(&fc->cursor)) {
       LSP_destroyCompletionList(&fc->lsp_datas.computed->completions);
-      gui_closePopup(gui_context);
+      gui_closeEDWPopup(gui_context);
       return;
     }
 
@@ -200,7 +200,7 @@ void receiveCompletionData(cJSON* packet, FileContainer* file, ViewPort* view_po
   // if there is no data we close the popup
   if (file->lsp_datas.computed->completions.completions.size == 0 && file->lsp_datas.computed->code_actions.size == 0) {
     if (view_port->gui->edw_context.pow_owner == COMPLETION) {
-      gui_closePopup(view_port->gui);
+      gui_closeEDWPopup(view_port->gui);
     }
     return;
   }

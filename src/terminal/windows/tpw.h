@@ -23,9 +23,8 @@ void gui_repaintTPW(gui_Context* gui_context);
 void gui_updateTPW(gui_Context* gui_context);
 
 // Complete API for gui_TPW
-void gui_addNewTPW(gui_Context* gui_context, gui_TPW* popup);
+void gui_showTPW(gui_Context* gui_context, gui_TPW* popup);
 void gui_setTPWVisibility(gui_Context* gui_context, gui_TPW* popup, bool visible);
-void gui_setTPWFocus(gui_Context* gui_context, gui_TPW* popup, bool has_focus);
 void gui_setTPWStrongFocus(gui_Context* gui_context, gui_TPW* popup, bool strong_focus);
 void gui_moveTPW(gui_Context* gui_context, gui_TPW* popup, int y, int x);
 void gui_resizeTPW(gui_Context* gui_context, gui_TPW* popup, int height, int width);
@@ -33,12 +32,12 @@ void gui_resizeTPW(gui_Context* gui_context, gui_TPW* popup, int height, int wid
 // Predefined positioning helpers
 void gui_calculateTPWPosition(gui_Context* gui_context, int height, int width, gui_TPW_Position pos, int* out_y,
                               int* out_x);
-gui_TPW* gui_createToplevelPopupPositioned(gui_Context* gui_context, int height, int width, gui_TPW_Position position,
-                                           gui_TPW_paintCallback paint_cb, gui_TPW_inputCallback input_cb,
-                                           gui_TPW_destroyCallback destroy_cb, void* payload);
+gui_TPW* gui_showTPWPositioned(gui_Context* gui_context, int height, int width, gui_TPW_Position position,
+                               gui_TPW_paintCallback paint_cb, gui_TPW_inputCallback input_cb,
+                               gui_TPW_destroyCallback destroy_cb, void* payload);
 
-void gui_destroyToplevelPopup(gui_Context* gui_context, gui_TPW* popup);
-void gui_destroyAllToplevelPopups(gui_Context* gui_context);
-void gui_setToplevelPopupFocus(gui_Context* gui_context, gui_TPW* popup);
+void gui_closeTPW(gui_Context* gui_context, gui_TPW* popup);
+void gui_closeAllTPW(gui_Context* gui_context);
+void gui_setTPWFocus(gui_Context* gui_context, gui_TPW* popup);
 
 #endif // ALWIDE_TOPLEVEL_POPUP_H

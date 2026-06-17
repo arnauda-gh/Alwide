@@ -1,12 +1,12 @@
 #include "editor_state.h"
-#include <stdio.h>
+
+#include <unistd.h>
 
 #include "../advanced/tree-sitter/tree_manager.h"
 #include "../data-management/state_control.h"
 #include "../terminal/term_handler.h"
 #include "../terminal/windows/edw.h"
 #include "../terminal/windows/popups/notification_popup.h"
-#include "../terminal/windows/tpw.h"
 #include "../utils/tools.h"
 #include "editor_lsp.h"
 
@@ -21,7 +21,7 @@ void runBackgroundProcess(EditorContext* ctx, int* key) {
 void runPostProcessing(EditorContext* ctx) {
   FileContainer* fc = &ctx->files[ctx->current_file_index];
   if (ctx->refresh_local_vars == true) {
-    gui_closePopup(&ctx->gui_context);
+    gui_closeEDWPopup(&ctx->gui_context);
     ctx->refresh_local_vars = false;
     ctx->old_history_frame = fc->history_frame;
     ctx->payload_state_change = getPayloadStateChange(&fc->highlight_data, &fc->lsp_datas);
@@ -34,7 +34,7 @@ void runPostProcessing(EditorContext* ctx) {
     if (cursor_row(fc->cursor) != cursor_row(fc->old_cur)) {
       // flag cursor changed row
       if (ctx->gui_context.edw_context.pow_owner == SIGNATURE_HELP) {
-        gui_closePopup(&ctx->gui_context);
+        gui_closeEDWPopup(&ctx->gui_context);
       }
     }
     fc->old_cur = fc->cursor;
@@ -47,21 +47,21 @@ void runPostProcessing(EditorContext* ctx) {
     ctx->old_selected_cursor = fc->select_cursor;
     gui_updateEDW(&ctx->gui_context);
     if (!cursor_is_disabled(fc->select_cursor)) {
-      gui_closePopup(&ctx->gui_context);
+      gui_closeEDWPopup(&ctx->gui_context);
     }
   }
 
   // flag screen_x change
   if (fc->old_screen_x != fc->screen_x) {
     gui_updateEDW(&ctx->gui_context);
-    gui_adaptPopup(&ctx->gui_context, fc->screen_x - fc->old_screen_x, 0);
+    gui_adaptEDWPopup(&ctx->gui_context, fc->screen_x - fc->old_screen_x, 0);
     fc->old_screen_x = fc->screen_x;
   }
 
   // flag screen_y change
   if (fc->old_screen_y != fc->screen_y) {
     gui_updateEDW(&ctx->gui_context);
-    gui_adaptPopup(&ctx->gui_context, 0, fc->screen_y - fc->old_screen_y);
+    gui_adaptEDWPopup(&ctx->gui_context, 0, fc->screen_y - fc->old_screen_y);
 
     // resize lnw_w to match with line_number_length
     int new_lnw_width = numberOfDigitOfNumber(fc->screen_y + getmaxy(ctx->gui_context.edw_context.ftw));

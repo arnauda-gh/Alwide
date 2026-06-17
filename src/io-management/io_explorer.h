@@ -27,4 +27,7 @@ void discoverFolder(ExplorerFolder* folder);
 
 void destroyFolder(ExplorerFolder* folder);
 
+void reloadFolder(ExplorerFolder* folder);
+
 #endif // IO_EXPLORER_H
+

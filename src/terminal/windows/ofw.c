@@ -29,6 +29,7 @@ void gui_repaintOFW(gui_OFW* context, FileContainer* files, int file_count, int 
   if (!((context->refresh_ofw == true || files[current_file].io_file.status == NONE) && context->ofw_height != 0)) {
     return;
   }
+  fprintf(stderr, "print OFW\n");
   // The current position of the cursor for the first line.
   wmove(context->ofw, 0, 0);
   int current_offset = getbegx(context->ofw);
