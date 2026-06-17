@@ -85,5 +85,23 @@ echo "✅ Alwide installed successfully!"
 echo "📍 Binary: $INSTALL_DIR/al"
 echo "📍 Config & Assets: $CONFIG_DIR"
 echo ""
-echo "Make sure $INSTALL_DIR is in your PATH."
-echo "You can now run 'al' to start the editor."
+
+# Check if INSTALL_DIR is in PATH
+case ":$PATH:" in
+    *":$INSTALL_DIR:"*)
+        echo "You can now run 'al' to start the editor."
+        ;;
+    *)
+        echo "⚠️  $INSTALL_DIR is not in your PATH."
+        echo "You can add it by running:"
+        if [ -n "$SHELL" ] && [ "${SHELL##*/}" = "zsh" ]; then
+            echo "    echo 'export PATH=\"\$PATH:\$HOME/.local/bin\"' >> ~/.zshrc"
+            echo "    source ~/.zshrc"
+        else
+            echo "    echo 'export PATH=\"\$PATH:\$HOME/.local/bin\"' >> ~/.bashrc"
+            echo "    source ~/.bashrc"
+        fi
+        echo ""
+        echo "Then, you can run 'al' to start the editor."
+        ;;
+esac
