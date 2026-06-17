@@ -15,7 +15,7 @@ void receiveHoverData(cJSON* packet, FileContainer* file, ViewPort* view_port, C
 
   // if there is no hover data we don't override the current data and we close the popup.
   if (hover.size == 0) {
-    gui_closePopup(view_port->gui);
+    gui_closeEDWPopup(view_port->gui);
     free(payload);
     return;
   }

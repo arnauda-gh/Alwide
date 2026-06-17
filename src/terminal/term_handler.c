@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <math.h>
 
+#include "../core/editor_context.h"
 #include "../environnement/constants.h"
 #include "highlight.h"
 #include "windows/edw.h"
@@ -24,6 +25,7 @@
 
 void gui_initGUIContext(gui_Context* gui_context) {
   gui_context->focus_w = NULL; // Used to set the window where start mouse drag
+  gui_context->focused_panel = PANEL_EDITOR;
   gui_context->toplevel_popups = NULL;
   gui_context->active_notifications = NULL;
   gui_context->notification_count = 0;
@@ -95,16 +97,12 @@ void gui_resetFocus(gui_Context* gui_context) { gui_context->focus_w = NULL; }
 void gui_repaintGUI(gui_Context* gui_context, WindowHighlightDescriptor* highlight_descriptor, ExplorerFolder* explorer,
                     FileContainer* files, int file_count, int current_file) {
   wnoutrefresh(stdscr);
-  gui_repaintEDW(&gui_context->edw_context, files[current_file].cursor, files[current_file].select_cursor,
-                 files[current_file].screen_x, files[current_file].screen_y, highlight_descriptor,
-                 files[current_file].lsp_datas.computed, LF_tab_size(files[current_file].feature));
-  gui_repaintFEW(&gui_context->few_context, explorer);
+  gui_repaintEDW(&gui_context->edw_context, files + current_file, highlight_descriptor);
+  gui_repaintFEW(&gui_context->few_context, explorer, gui_context->focused_panel == PANEL_FILE_EXPLORER);
   gui_repaintOFW(&gui_context->ofw_context, files, file_count, current_file);
-  gui_repaintSBW(&gui_context->edw_context, file_count > 0 ? &files[current_file] : NULL);
   gui_repaintTPW(gui_context);
   doupdate();
 }
-
 
 
 LineMarker gui_getMarkerForCurrentLine(int row, WindowHighlightDescriptor* highlight_descriptor, int whd_offset,
@@ -143,6 +141,7 @@ void gui_updateGUI(gui_Context* gui_context) {
   gui_updateEDW(gui_context);
   gui_updateFEW(gui_context);
   gui_updateOFW(gui_context);
+  gui_updateTPW(gui_context);
 }
 
 bool gui_doesGUINeedRepaint(gui_Context* gui_context) {
@@ -256,4 +255,3 @@ LineIdentifier getLineIdForScreenX(LineIdentifier line_id, int screen_x, int x_c
 
 
 void setDesiredColumn(Cursor cursor, int* desired_column) { *desired_column = cursor.line_id.absolute_column; }
-

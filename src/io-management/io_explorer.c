@@ -94,3 +94,26 @@ void destroyFolder(ExplorerFolder* folder) {
   }
   free(folder->folders);
 }
+
+void reloadFolder(ExplorerFolder* folder) {
+  if (folder == NULL) {
+    return;
+  }
+
+  free(folder->files);
+  for (int i = 0; i < folder->folder_count; i++) {
+    destroyFolder(folder->folders + i);
+  }
+  free(folder->folders);
+
+  folder->folders = NULL;
+  folder->files = NULL;
+  folder->folder_count = 0;
+  folder->file_count = 0;
+  folder->discovered = false;
+
+  if (folder->open) {
+    discoverFolder(folder);
+  }
+}
+

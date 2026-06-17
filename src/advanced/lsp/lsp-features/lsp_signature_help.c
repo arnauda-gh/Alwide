@@ -14,7 +14,7 @@ void receiveSignatureHelpData(cJSON* packet, FileContainer* file, gui_Context* g
 
   if (file->lsp_datas.computed->signature_help.signatures_size == 0) {
     if (gui->edw_context.pow_owner == SIGNATURE_HELP) {
-      gui_closePopup(gui);
+      gui_closeEDWPopup(gui);
     }
     return;
   }
@@ -142,7 +142,7 @@ bool adaptSignatureHelpOnDelete(Cursor cursor, Cursor select_cursor, LSP_Data* l
       }
 
       if (areChar_U8Equals(u8, readChar_U8FromCharArray("("))) {
-        gui_closePopup(&ctx->gui_context);
+        gui_closeEDWPopup(&ctx->gui_context);
       }
     }
   }
@@ -157,7 +157,7 @@ bool askSignatureHelpOnChar(EditorContext* ctx, int c, FileContainer* fc, Cursor
   }
 
   if (c == ')' && ctx->gui_context.edw_context.pow_owner == SIGNATURE_HELP) {
-    gui_closePopup(&ctx->gui_context);
+    gui_closeEDWPopup(&ctx->gui_context);
   }
 
   return false;

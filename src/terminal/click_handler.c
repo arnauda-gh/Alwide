@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "../advanced/lsp/lsp-features/lsp_code_action.h"
+#include "../core/features/navigation_history.h"
 #include "../data-management/file_management.h"
 #include "../environnement/constants.h"
 #include "../environnement/global_variables.h"
@@ -13,9 +14,10 @@
 #include "term_handler.h"
 #include "windows/edw.h"
 #include "windows/few.h"
+#include "windows/popups/explorer_context_popup.h"
 #include "windows/popups/language_popup.h"
 #include "windows/pow.h"
-#include "../core/features/navigation_history.h"
+#include "windows/tpw.h"
 
 static int find_clicked_tab_index(gui_Context* gui, FileContainer* files, int file_count, int current_file,
                                   const MEVENT* m);
@@ -28,6 +30,13 @@ static inline bool is_left_click_pressed(const MEVENT* m) { return m->bstate & B
 static inline bool is_left_click_released(const MEVENT* m) { return m->bstate & BUTTON1_RELEASED; }
 static inline bool is_left_click(const MEVENT* m) { return m->bstate & BUTTON1_CLICKED; }
 static inline bool is_left_double_click(const MEVENT* m) { return m->bstate & BUTTON1_DOUBLE_CLICKED; }
+static inline bool is_left_click_action(const MEVENT* m) { return is_left_click_pressed(m) || is_left_click(m); }
+
+static inline bool is_right_click_pressed(const MEVENT* m) { return m->bstate & BUTTON3_PRESSED; }
+static inline bool is_right_click_released(const MEVENT* m) { return m->bstate & BUTTON3_RELEASED; }
+static inline bool is_right_click(const MEVENT* m) { return m->bstate & BUTTON3_CLICKED; }
+static inline bool is_right_double_click(const MEVENT* m) { return m->bstate & BUTTON3_DOUBLE_CLICKED; }
+static inline bool is_right_click_action(const MEVENT* m) { return is_right_click_pressed(m) || is_right_click(m); }
 
 static inline bool is_scroll_up(const MEVENT* m) { return m->bstate & BUTTON4_PRESSED; }
 static inline bool is_scroll_down(const MEVENT* m) { return m->bstate & BUTTON5_PRESSED; }
@@ -68,12 +77,12 @@ static Cursor calculate_cursor_from_click(const Cursor* current, const MEVENT* m
 static void handle_file_explorer_interaction(EditorContext* ctx) {
   gui_Context* gui = &ctx->gui_context;
 
-  if (is_left_click_pressed(&ctx->m_event)) {
+  if (is_left_click_pressed(&ctx->m_event) || is_right_click_pressed(&ctx->m_event)) {
     gui->focus_w = gui->few_context.few;
+    gui->focused_panel = PANEL_FILE_EXPLORER;
   }
 
-  handleFileExplorerClick(gui, &ctx->files, &ctx->file_count, &ctx->current_file_index, &ctx->pwd, ctx->m_event,
-                          &ctx->refresh_local_vars);
+  handleFileExplorerClick(ctx);
 }
 
 static void handle_opened_files_interaction(EditorContext* ctx) {
@@ -81,6 +90,7 @@ static void handle_opened_files_interaction(EditorContext* ctx) {
 
   if (is_left_click_pressed(&ctx->m_event)) {
     gui->focus_w = gui->ofw_context.ofw;
+    gui->focused_panel = PANEL_EDITOR;
   }
 
   handleOpenedFileClick(gui, ctx->files, &ctx->file_count, &ctx->current_file_index, ctx->m_event,
@@ -90,6 +100,15 @@ static void handle_opened_files_interaction(EditorContext* ctx) {
 static void handle_editor_interaction(EditorContext* ctx) {
   gui_Context* gui = &ctx->gui_context;
   FileContainer* fc = &ctx->files[ctx->current_file_index];
+
+  // Main editor window interaction
+  if (is_left_click_pressed(&ctx->m_event)) {
+    if (gui->focused_panel != PANEL_EDITOR) {
+      gui_updateFEW(&ctx->gui_context);
+    }
+    gui->focus_w = gui->edw_context.ftw;
+    gui->focused_panel = PANEL_EDITOR;
+  }
 
   // Check status bar first
   if (gui->edw_context.show_sbw && isClickInsideWindow(gui->edw_context.sbw, &ctx->m_event)) {
@@ -101,10 +120,6 @@ static void handle_editor_interaction(EditorContext* ctx) {
     }
   }
 
-  // Main editor window interaction
-  if (is_left_click_pressed(&ctx->m_event)) {
-    gui->focus_w = gui->edw_context.ftw;
-  }
 
   handleEditorClick(gui, &fc->cursor, &fc->select_cursor, &fc->desired_column, &fc->screen_x, &fc->screen_y,
                     &ctx->m_event, ctx->mouse_drag, fc, &ctx->highlight_descriptor);
@@ -163,19 +178,19 @@ static void handle_editor_cursor_action(gui_Context* gui_context, Cursor* cursor
       *cursor = target;
     }
     setDesiredColumn(*cursor, desired_column);
-    gui_closePopup(gui_context);
+    gui_closeEDWPopup(gui_context);
   }
 
   if (is_left_click_pressed(m_event)) {
     setSelectCursorOff(cursor, select_cursor, SELECT_OFF_RIGHT);
     *cursor = calculate_cursor_from_click(cursor, m_event, screen_x, screen_y, off_x, off_y, tab_size);
     setDesiredColumn(*cursor, desired_column);
-    gui_closePopup(gui_context);
+    gui_closeEDWPopup(gui_context);
   }
 
   if (is_left_double_click(m_event)) {
     selectWord(cursor, select_cursor);
-    gui_closePopup(gui_context);
+    gui_closeEDWPopup(gui_context);
   }
 }
 
@@ -220,7 +235,7 @@ static bool handle_editor_gutter_interaction(gui_Context* gui, int screen_y, con
     if (is_left_click(m)) {
       if (gui->edw_context.pow_owner == COMPLETION) {
         LSP_destroyCompletionList(&file->lsp_datas.computed->completions);
-        gui_closePopup(gui);
+        gui_closeEDWPopup(gui);
       }
       file->cursor = LSP_tryToReachCursorForLSPPosition(getLSPServerForLanguage(&lsp_servers, file->lsp_datas.lang_id),
                                                         file->cursor, diag->range.pos1);
@@ -433,9 +448,11 @@ bool getFileClickedFileExplorer(ExplorerFolder* pwd, int y_click, int off_x, int
   return find_explorer_item(pwd, &target_y, res_folder, file_idx);
 }
 
-void handleFileExplorerClick(gui_Context* gui, FileContainer** files, int* file_count, int* current_file,
-                             ExplorerFolder* pwd, MEVENT m, bool* refresh_local_vars) {
-  gui_FEW* few = &gui->few_context;
+void handleFileExplorerClick(EditorContext* ctx) {
+  gui_FEW* few = &ctx->gui_context.few_context;
+  MEVENT m = ctx->m_event;
+  gui_Context* gui = &ctx->gui_context;
+  ExplorerFolder* pwd = &ctx->pwd;
 
   // Scrolling and Resizing
   if (is_scroll_up(&m) || is_scroll_left(&m)) {
@@ -462,6 +479,18 @@ void handleFileExplorerClick(gui_Context* gui, FileContainer** files, int* file_
     return;
   }
 
+  if (is_right_click_pressed(&m)) {
+    few->few_selected_line = few->few_y_offset + m.y + 1;
+    gui_updateFEW(gui);
+    ExplorerFolder* res_folder;
+    int res_index;
+    if (getFileClickedFileExplorer(pwd, m.y, gui->few_context.few_x_offset, gui->few_context.few_y_offset, &res_folder,
+                                   &res_index)) {
+      gui_openExplorerContextPopup(ctx, ctx->m_event.y + 1, ctx->m_event.x, res_folder, res_index);
+    }
+    return;
+  }
+
   // Selection
   if (is_left_click_pressed(&m)) {
     few->few_selected_line = few->few_y_offset + m.y + 1;
@@ -478,8 +507,8 @@ void handleFileExplorerClick(gui_Context* gui, FileContainer** files, int* file_
         res_folder->open = !res_folder->open;
       }
       else {
-        openNewFile(res_folder->files[res_index].path, files, file_count, current_file, &gui->ofw_context.refresh_ofw,
-                    refresh_local_vars);
+        openNewFile(res_folder->files[res_index].path, &ctx->files, &ctx->file_count, &ctx->current_file_index,
+                    &gui->ofw_context.refresh_ofw, &ctx->refresh_local_vars);
       }
       gui_updateFEW(gui);
     }
@@ -497,10 +526,29 @@ bool dispatchInputToTPW(EditorContext* ctx, int key) {
       bool in_window = (key == H_KEY_MOUSE) ? isClickInsideWindow(popup->tpw, &ctx->m_event) : false;
 
       if (key != H_KEY_MOUSE || in_window) {
+        // if in window or key input
+
+        // default esc sequence to close popup.
+        if (popup->closable && (key == H_KEY_ESCAPE || key == K_SPECIAL(K_MOD_CTRL, '['))) {
+          gui_closeTPW(&ctx->gui_context, popup);
+          return true;
+        }
+
+        // dispatch to the custom input function.
         if (popup->on_input(popup, key, &ctx->m_event, popup->payload)) {
           return true;
         }
       }
+      else if (key == H_KEY_MOUSE && !in_window) {
+
+        // if mouse event but not in window close if needed.
+        if (popup->closable && is_left_click_pressed(&ctx->m_event)) {
+          gui_closeTPW(&ctx->gui_context, popup);
+          // we don't consume the mouse event.
+          return false;
+        }
+      }
+
       if (popup->strong_focus) {
         return true;
       }

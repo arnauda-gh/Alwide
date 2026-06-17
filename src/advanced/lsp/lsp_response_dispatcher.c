@@ -33,7 +33,7 @@ void responseDispatcher(cJSON* packet, LSP_Server* lsp, ModuleContext* data) {
   if (cJSON_GetObjectItem(packet, "error")) {
     if (strcmp(context.method, "textDocument/completion") == 0) {
       if (data->view_port.gui->edw_context.pow_owner == COMPLETION) {
-        gui_closePopup(data->view_port.gui);
+        gui_closeEDWPopup(data->view_port.gui);
       }
     }
     fprintf(stderr, "LSP : ERROR RECEIVED from %s !\n    => Method issue : %s.\n    => Error message : %s\n",

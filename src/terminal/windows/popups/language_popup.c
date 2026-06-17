@@ -103,8 +103,9 @@ static bool input_lang_popup(gui_TPW* popup, int key, MEVENT* m_event, void* pay
   LanguageSelectPopupContext* state = payload;
   EditorContext* ctx = state->ctx;
 
-  if (key == H_KEY_ESCAPE || key == K_SPECIAL(K_MOD_CTRL, '[')) {
-    gui_destroyToplevelPopup(&ctx->gui_context, popup);
+  // q : quit
+  if (key == 'q') {
+    gui_closeTPW(&ctx->gui_context, popup);
     return true;
   }
 
@@ -132,26 +133,26 @@ static bool input_lang_popup(gui_TPW* popup, int key, MEVENT* m_event, void* pay
 
   if (key == H_KEY_ENTER || key == K_SPECIAL(0, '\r')) {
     apply_language_change(ctx, state->selected_index);
-    gui_destroyToplevelPopup(&ctx->gui_context, popup);
+    gui_closeTPW(&ctx->gui_context, popup);
     return true;
+  }
+
+  if (key == H_KEY_MOUSE) {
+    int clicked_y = m_event->y - getbegy(popup->tpw);
+    int index = clicked_y - 1;
+    if (index >= 0 && index < language_features.size && state->selected_index != index) {
+      state->selected_index = index;
+      gui_updateTPW(&ctx->gui_context);
+      return true;
+    }
   }
 
   if (key == H_KEY_MOUSE && (m_event->bstate & BUTTON1_CLICKED || m_event->bstate & BUTTON1_PRESSED)) {
     int clicked_y = m_event->y - getbegy(popup->tpw);
     int index = clicked_y - 1;
     if (index >= 0 && index < language_features.size) {
-      state->selected_index = index;
-      return true;
-    }
-    gui_updateTPW(&ctx->gui_context);
-  }
-
-  if (key == H_KEY_MOUSE && m_event->bstate & BUTTON1_DOUBLE_CLICKED) {
-    int clicked_y = m_event->y - getbegy(popup->tpw);
-    int index = clicked_y - 1;
-    if (index >= 0 && index < language_features.size) {
       apply_language_change(ctx, index);
-      gui_destroyToplevelPopup(&ctx->gui_context, popup);
+      gui_closeTPW(&ctx->gui_context, popup);
       return true;
     }
   }

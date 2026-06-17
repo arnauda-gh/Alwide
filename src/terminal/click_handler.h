@@ -22,8 +22,7 @@ void handleEditorClick(gui_Context* gui_context, Cursor* cursor, Cursor* select_
 void handleOpenedFileClick(gui_Context* gui_context, FileContainer* files, int* file_count, int* current_file,
                            MEVENT m_event, bool* refresh_local_vars, bool mouse_drag);
 
-void handleFileExplorerClick(gui_Context* gui_context, FileContainer** files, int* file_count, int* current_file,
-                             ExplorerFolder* pwd, MEVENT m_event, bool* refresh_local_vars);
+void handleFileExplorerClick(EditorContext *ctx);
 
 // true if found, false if not. if file_index == -1 => Res_folder was clicked. If file_index != -1 => file clicked is
 // res_folder.files[file_index].

@@ -73,7 +73,7 @@ void receiveGotoData(cJSON* packet, LSP_Server* lsp, FileContainer* file, Module
       }
       else {
         fprintf(stderr, "No location found for %s\n", method);
-        gui_closePopup(data->view_port.gui);
+        gui_closeEDWPopup(data->view_port.gui);
       }
       free(payload);
     }
