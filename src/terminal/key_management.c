@@ -17,7 +17,7 @@ time_val lastClick = 0;
 int last_clicked_x = 0;
 int last_clicked_y = 0;
 
-void printIfPresent(MEVENT* event, int value, char* print) {
+static void printIfPresent(MEVENT* event, unsigned long long value, char* print) {
   if (event->bstate & value) {
     fprintf(stderr, "%s, ", print);
   }
