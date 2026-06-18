@@ -57,7 +57,7 @@ void gui_switchFEW(gui_Context* gui_context) {
     gui_context->few_context.few = newwin(0, gui_context->few_context.few_width, 0, 0);
     gui_context->few_context.refresh_few = true;
     wbkgd(gui_context->few_context.few, COLOR_PAIR(DEFAULT_COLOR_PAIR));
-    gui_context->focused_panel = PANEL_FILE_EXPLORER;
+    gui_context->focused_panel = PANEL_EDITOR;
   }
   else {
     // Close File Explorer Window
