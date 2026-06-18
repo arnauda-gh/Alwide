@@ -1,3 +1,5 @@
+
+
 # Alwide — A LightWeight IDE
 
 > **"Sublime Text" in the terminal.** Alwide is a fast, powerful, and user-friendly TUI IDE. It aims to provide the same
@@ -14,7 +16,7 @@
   <img width="700" alt="Alwide Screenshot" src="https://github.com/user-attachments/assets/f73b961f-0fc2-4c0a-81b6-3e391a96031b" />
 </p>
 
-https://github.com/user-attachments/assets/c6f40db1-bc5e-4c90-88a5-c7e5a5c72059
+https://github.com/user-attachments/assets/502e983a-026a-4c93-9ffc-d3f1a2e6c69a
 
 
 
@@ -42,7 +44,7 @@ projects.
 ### Supported Languages
 
 Many languages are supported out of the box. If your preferred language is missing, you can add support in just a few
-minutes by cloning the repo and updating the configuration (ask you best llm friend)!
+minutes by cloning the repo and updating the configuration (ask your best llm friend)!
 
 **C/C++, Python, Java, Go, Rust, JavaScript/TypeScript, Dart, Lua, Bash, HTML, CSS, JSON, Markdown, VHDL, Assembly, and
 more.**
