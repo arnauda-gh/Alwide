@@ -423,15 +423,26 @@ Cursor byteCursorToCursor(Cursor cursor, int row, int byte_column) {
   row += 1;
   cursor = tryToReachAbsPosition(cursor, row, 0);
 
+  LineNode* line_node = cursor.line_id.line;
   int byte_count = 0;
-  while (byte_count < byte_column) {
-    Cursor old_cur = cursor;
-    cursor = moveRight(cursor);
-    if (old_cur.file_id.absolute_row != cursor.file_id.absolute_row || cursor_eq(old_cur, cursor)) {
-      return old_cur;
-    }
-    byte_count += sizeChar_U8(getCharAtCursor(cursor));
+  int absolute_column = 0;
+
+  while (line_node->next != NULL && byte_count + line_node->byte_count <= byte_column) {
+    byte_count += line_node->byte_count;
+    absolute_column += line_node->element_number;
+    line_node = line_node->next;
   }
+
+  int j = 0;
+  while (j < line_node->element_number && byte_count < byte_column) {
+    byte_count += utf8_size(line_node->ch[j]);
+    j++;
+  }
+
+  cursor.line_id.line = line_node;
+  cursor.line_id.relative_column = j;
+  cursor.line_id.absolute_column = absolute_column + j;
+
   return cursor;
 }
 

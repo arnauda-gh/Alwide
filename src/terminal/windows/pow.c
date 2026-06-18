@@ -126,7 +126,7 @@ void gui_showDiagnostic(gui_Context* gui_context, int y, int x, LSP_Diagnostic* 
   countStringFrame(diagnostic->message, ch_length, &height, &unused, &max_width, tab_size);
 
   bool isOpened = gui_showEDWPopup(gui_context, y + height, x - 2, height,
-                                min(getmaxx(gui_context->edw_context.ftw), max_width + 2), DIAGNOSTICS);
+                                   min(getmaxx(gui_context->edw_context.ftw), max_width + 2), DIAGNOSTICS);
   // couldn't show popup
   if (!isOpened) {
     return;
@@ -396,7 +396,7 @@ void gui_printPopup(gui_EDW* context, Cursor* cursor, LSP_ComputedData* lsp_data
 }
 
 bool gui_handleCompletionInput(gui_Context* context, FileContainer* fc, int key,
-                               PayloadStateChange *payload_state_change, ModuleContext* payload, MEVENT* m_event) {
+                               PayloadStateChange* payload_state_change, ModuleContext* payload, MEVENT* m_event) {
   Cursor* cursor = &fc->cursor;
   LSP_ComputedData* lsp_data = fc->lsp_datas.computed;
   History** history_p = &fc->history_frame;
@@ -442,7 +442,7 @@ bool gui_handleCompletionInput(gui_Context* context, FileContainer* fc, int key,
       }
     }
 
-    if (m_event->bstate & NO_EVENT_MOUSE) {
+    if (m_event->bstate) {
       int clicked_item = context->edw_context.item_select_offset_y + (m_event->y - getbegy(context->edw_context.pow));
       if (clicked_item >= 0 && clicked_item < total_size && clicked_item != context->edw_context.item_selected) {
         context->edw_context.item_selected = clicked_item;
@@ -496,7 +496,7 @@ bool gui_handleCompletionInput(gui_Context* context, FileContainer* fc, int key,
 }
 
 bool gui_handleGotoChoiceInput(gui_Context* context, FileContainer* fc, int key,
-                               PayloadStateChange *payload_state_change, ModuleContext* payload, MEVENT* m_event) {
+                               PayloadStateChange* payload_state_change, ModuleContext* payload, MEVENT* m_event) {
   LSP_ComputedData* lsp_data = fc->lsp_datas.computed;
   int height = getmaxy(context->edw_context.pow) - 2;
 
@@ -516,16 +516,16 @@ bool gui_handleGotoChoiceInput(gui_Context* context, FileContainer* fc, int key,
         gui_updateEDW(context);
       }
     }
-    else if (m_event->bstate & (BUTTON1_PRESSED | BUTTON1_CLICKED)) {
+    else if (m_event->bstate) {
       int clicked_item =
         context->edw_context.item_select_offset_y + (m_event->y - getbegy(context->edw_context.pow) - 1);
-      if (clicked_item >= 0 && clicked_item < item_count) {
+      if (clicked_item >= 0 && clicked_item < item_count && context->edw_context.item_selected != clicked_item) {
         context->edw_context.item_selected = clicked_item;
         gui_updateEDW(context);
       }
     }
 
-    if (m_event->bstate & BUTTON1_DOUBLE_CLICKED) {
+    if (m_event->bstate & (BUTTON1_PRESSED | BUTTON1_CLICKED)) {
       int clicked_item =
         context->edw_context.item_select_offset_y + (m_event->y - getbegy(context->edw_context.pow) - 1);
       if (clicked_item >= 0 && clicked_item < item_count) {
@@ -571,7 +571,7 @@ bool gui_handleGotoChoiceInput(gui_Context* context, FileContainer* fc, int key,
 }
 
 
-bool gui_handlePopupInput(gui_Context* context, FileContainer* fc, int key, PayloadStateChange *payload_state_change,
+bool gui_handlePopupInput(gui_Context* context, FileContainer* fc, int key, PayloadStateChange* payload_state_change,
                           ModuleContext* payload, MEVENT* m_event) {
   if (context->edw_context.show_pow == false || context->edw_context.pow == NULL) {
     return false;

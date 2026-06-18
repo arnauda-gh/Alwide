@@ -13,7 +13,9 @@
 #include "key_management.h"
 #include "term_handler.h"
 #include "windows/edw.h"
+#include "graphics_tools.h"
 #include "windows/few.h"
+#include "windows/ofw.h"
 #include "windows/popups/few_action_popup.h"
 #include "windows/popups/language_popup.h"
 #include "windows/pow.h"
@@ -42,6 +44,8 @@ static inline bool is_scroll_up(const MEVENT* m) { return m->bstate & BUTTON4_PR
 static inline bool is_scroll_down(const MEVENT* m) { return m->bstate & BUTTON5_PRESSED; }
 static inline bool is_scroll_left(const MEVENT* m) { return m->bstate & BUTTON6_PRESSED; }
 static inline bool is_scroll_right(const MEVENT* m) { return m->bstate & BUTTON7_PRESSED; }
+static inline bool is_button8_pressed(const MEVENT* m) { return m->bstate & BUTTON8_PRESSED; }
+static inline bool is_button9_pressed(const MEVENT* m) { return m->bstate & BUTTON9_PRESSED; }
 
 static inline bool is_shift_active(const MEVENT* m) { return m->bstate & BUTTON_SHIFT; }
 static inline bool is_ctrl_active(const MEVENT* m) { return m->bstate & BUTTON_CTRL; }
@@ -110,22 +114,20 @@ static void handle_editor_interaction(EditorContext* ctx) {
     gui->focused_panel = PANEL_EDITOR;
   }
 
-  // Check status bar first
-  if (gui->edw_context.show_sbw && isClickInsideWindow(gui->edw_context.sbw, &ctx->m_event)) {
-    if (is_left_click_pressed(&ctx->m_event) || is_left_click(&ctx->m_event)) {
-      ctx->mouse_drag = false;
-      gui->focus_w = NULL;
-      gui_openLanguageSelectPopup(ctx);
-      return;
-    }
-  }
-
-
-  handleEditorClick(gui, &fc->cursor, &fc->select_cursor, &fc->desired_column, &fc->screen_x, &fc->screen_y,
+  handleEditorClick(ctx, &fc->cursor, &fc->select_cursor, &fc->desired_column, &fc->screen_x, &fc->screen_y,
                     &ctx->m_event, ctx->mouse_drag, fc, &ctx->highlight_descriptor);
 }
 
 void handleClick(EditorContext* ctx) {
+  if (is_button8_pressed(&ctx->m_event)) {
+    navigateBack(ctx);
+    return;
+  }
+  if (is_button9_pressed(&ctx->m_event)) {
+    navigateForward(ctx);
+    return;
+  }
+
   if (is_left_click_pressed(&ctx->m_event) && !ctx->mouse_drag) {
     ctx->mouse_drag = true;
   }
@@ -222,7 +224,7 @@ static void handle_editor_scrolling(gui_Context* gui, int* screen_x, int* screen
   }
 }
 
-static bool handle_editor_gutter_interaction(gui_Context* gui, int screen_y, const MEVENT* m, FileContainer* file,
+static bool handle_editor_lnw_interaction(gui_Context* gui, int screen_y, const MEVENT* m, FileContainer* file,
                                              WindowHighlightDescriptor* whd) {
   LSP_Diagnostic* diag = NULL;
   int row = screen_y + m->y - getbegy(gui->edw_context.lnw);
@@ -293,8 +295,48 @@ static void handle_editor_content_interaction(gui_Context* gui, int screen_x, in
   }
 }
 
-void handleEditorClick(gui_Context* gui, Cursor* cursor, Cursor* select_cursor, int* desired_column, int* screen_x,
+void handleEditorClick(EditorContext* ctx, Cursor* cursor, Cursor* select_cursor, int* desired_column, int* screen_x,
                        int* screen_y, MEVENT* m, bool mouse_drag, FileContainer* file, WindowHighlightDescriptor* whd) {
+  gui_Context* gui = &ctx->gui_context;
+
+  // Track status bar button hover state
+  bool currently_hovered = false;
+  if (gui->edw_context.show_sbw && gui->edw_context.sbw != NULL && isClickInsideWindow(gui->edw_context.sbw, m)) {
+    int beg_x = getbegx(gui->edw_context.sbw);
+    int rel_x = m->x - beg_x;
+    int button_rows = 0;
+    int button_cols = 0;
+    countStringFrame(STATUS_BAR_BUTTON_TEXT, strlen(STATUS_BAR_BUTTON_TEXT), &button_rows, &button_cols, NULL, 4);
+    if (rel_x >= 0 && rel_x < button_cols) {
+      currently_hovered = true;
+    }
+  }
+
+  if (currently_hovered != gui->edw_context.sbw_button_hovered) {
+    gui->edw_context.sbw_button_hovered = currently_hovered;
+    gui_updateEDW(gui);
+  }
+
+  // Handle click on status bar / button
+  if (gui->edw_context.show_sbw && isClickInsideWindow(gui->edw_context.sbw, m)) {
+    if (is_left_click_pressed(m)) {
+      ctx->mouse_drag = false;
+      gui->edw_context.sbw_button_hovered = false;
+      gui->focus_w = NULL;
+      if (currently_hovered) {
+        gui_switchFEW(gui);
+        gui_switchOFW(gui);
+        gui_updateGUI(gui);
+      }
+      else {
+        gui_openLanguageSelectPopup(ctx);
+      }
+    }
+    return;
+  }
+
+
+
   int off_y = getbegy(gui->edw_context.ftw);
   if (m->y < off_y) {
     m->y = off_y;
@@ -302,7 +344,7 @@ void handleEditorClick(gui_Context* gui, Cursor* cursor, Cursor* select_cursor, 
 
   // Interaction chain (matches original else-if logic)
   if (isClickInsideWindow(gui->edw_context.lnw, m)) {
-    if (handle_editor_gutter_interaction(gui, *screen_y, m, file, whd)) {
+    if (handle_editor_lnw_interaction(gui, *screen_y, m, file, whd)) {
       return;
     }
   }

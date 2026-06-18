@@ -316,18 +316,26 @@ LSP_Position LSP_pos_from_cursor(LSP_Server* server_ptr, Cursor cursor) {
   else {
     // Default to UTF-16
     int utf16_offset = 0;
-    LineNode* current = cursor.line_id.line;
-    while (current->prev != NULL) {
-      current = current->prev;
-    }
+    LineNode* head = getLineForFileIdentifier(cursor.file_id);
+    LineNode* current = head;
     while (current != cursor.line_id.line) {
-      for (int i = 0; i < current->element_number; i++) {
-        utf16_offset += utf16_length(current->ch[i]);
+      if (current->byte_count == current->element_number) {
+        utf16_offset += current->element_number;
+      }
+      else {
+        for (int i = 0; i < current->element_number; i++) {
+          utf16_offset += utf16_length(current->ch[i]);
+        }
       }
       current = current->next;
     }
-    for (int i = 0; i < cursor.line_id.relative_column; i++) {
-      utf16_offset += utf16_length(current->ch[i]);
+    if (current->byte_count == current->element_number) {
+      utf16_offset += cursor.line_id.relative_column;
+    }
+    else {
+      for (int i = 0; i < cursor.line_id.relative_column; i++) {
+        utf16_offset += utf16_length(current->ch[i]);
+      }
     }
     column_offset = utf16_offset;
   }

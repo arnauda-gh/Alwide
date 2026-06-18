@@ -525,13 +525,13 @@ LineIdentifier removeCharInLine(LineIdentifier line_id) {
   assert(cursorPos >= 0);
   assert(cursorPos < line->element_number);
 
+  line->byte_count -= utf8_size(line->ch[cursorPos]);
   if (cursorPos != line->element_number - 1) {
 #ifdef LOGS
     fprintf(stderr, "REMOVE IN MIDDLE. Table Size %d. Element Number %d\r\n", line->current_max_element_number,
             line->element_number);
 #endif
     // fprintf(stderr, "At move : %d, first %d, ")
-    line->byte_count -= utf8_size(line->ch[cursorPos]);
     memmove_CharU8Array(line->ch + cursorPos, line->ch + cursorPos + 1, line->element_number - cursorPos - 1);
   }
   else {
@@ -827,6 +827,7 @@ void initEmptyFileNode(FileNode* file) {
   file->current_max_element_number = 0;
   file->element_number = 0;
   file->byte_count = 0;
+  file->absolute_byte_offset = 0;
   for (int i = 0; i < MAX_ELEMENT_NODE; i++) {
     file->lines_byte_count[i] = 0;
   }
@@ -860,6 +861,21 @@ void rebindFileNode(FileNode* file, int start, int length) {
 }
 
 void rebindFullFileNode(FileNode* file) { rebindFileNode(file, 0, -1); }
+
+void updateAbsoluteByteOffsets(FileNode* node) {
+  if (node == NULL) {
+    return;
+  }
+  while (node->prev != NULL) {
+    node = node->prev;
+  }
+  int offset = 0;
+  while (node != NULL) {
+    node->absolute_byte_offset = offset;
+    offset += node->byte_count;
+    node = node->next;
+  }
+}
 
 
 /**
@@ -1745,6 +1761,7 @@ Cursor insertCharInLineC(Cursor cursor, Char_U8 ch) {
   assert(cursor.file_id.relative_row > 0 && cursor.file_id.relative_row <= MAX_ELEMENT_NODE);
   cursor.file_id.file->lines_byte_count[cursor.file_id.relative_row - 1] += utf8_size(ch);
   cursor.file_id.file->byte_count += utf8_size(ch);
+  updateAbsoluteByteOffsets(cursor.file_id.file);
   return cursor;
 }
 
@@ -1753,8 +1770,9 @@ Cursor removeCharInLineC(Cursor cursor) {
   cursor.line_id = removeCharInLine(cursor.line_id);
   cursor = moduloCursor(cursor);
   assert(cursor.file_id.relative_row > 0 && cursor.file_id.relative_row <= MAX_ELEMENT_NODE);
-  cursor.file_id.file->lines_byte_count[cursor.file_id.relative_row - 1] += utf8_size(ch);
+  cursor.file_id.file->lines_byte_count[cursor.file_id.relative_row - 1] -= utf8_size(ch);
   cursor.file_id.file->byte_count -= utf8_size(ch);
+  updateAbsoluteByteOffsets(cursor.file_id.file);
   return cursor;
 }
 
@@ -1763,6 +1781,7 @@ Cursor removeLineInFileC(Cursor cursor) {
   FileIdentifier file_id_after_del = removeLineInFile(cursor.file_id);
   cursor.file_id = tryToReachAbsRow(file_id_after_del, file_id_after_del.absolute_row + 1);
   cursor.line_id = getLastLineNode(getLineForFileIdentifier(cursor.file_id));
+  updateAbsoluteByteOffsets(cursor.file_id.file);
   return cursor;
 }
 
@@ -1921,6 +1940,7 @@ Cursor insertNewLineInLineC(Cursor cursor) {
   }
 
   LineIdentifier newLineId = moduloLineIdentifierR(newLine, 0);
+  updateAbsoluteByteOffsets(newFileIdForNewLine.file);
   return cursorOf(newFileIdForNewLine, newLineId);
 }
 
@@ -2016,6 +2036,7 @@ Cursor concatNeighbordsLinesC(Cursor cursor) {
   // assert(checkByteCountIntegrity(cursor.file_id.file));
 #endif
 
+  updateAbsoluteByteOffsets(newLineId.file);
   return cursorOf(newLineId, lastNode);
 }
 
@@ -2098,6 +2119,7 @@ Cursor bulkDelete(Cursor cursor, Cursor select_cursor) {
     cursor = supprCharAtCursor_internal(cursor);
   }
 
+  updateAbsoluteByteOffsets(cursor.file_id.file);
   return cursor;
 }
 
@@ -2231,14 +2253,7 @@ Cursor desc_to_cursor(Cursor base, CursorDescriptor descriptor) {
 unsigned int getIndexForCursor(Cursor cursor) {
   cursor = moduloCursor(cursor);
   FileNode* current_file = cursor.file_id.file;
-  unsigned int index = 0;
-
-  // Adding previous nodes byte_count
-  current_file = current_file->prev;
-  while (current_file != NULL) {
-    index += current_file->byte_count;
-    current_file = current_file->prev;
-  }
+  unsigned int index = current_file->absolute_byte_offset;
 
   // Adding previous line byte_count
   for (int i = 0; i < cursor.file_id.relative_row - 1; i++) {
@@ -2253,8 +2268,13 @@ unsigned int getIndexForCursor(Cursor cursor) {
   }
 
   // Adding current linenode chars
-  for (int i = 0; i < cursor.line_id.relative_column; i++) {
-    index += utf8_size(cursor.line_id.line->ch[i]);
+  if (cursor.line_id.line->byte_count == cursor.line_id.line->element_number) {
+    index += cursor.line_id.relative_column;
+  }
+  else {
+    for (int i = 0; i < cursor.line_id.relative_column; i++) {
+      index += utf8_size(cursor.line_id.line->ch[i]);
+    }
   }
 
   return index;
@@ -2266,21 +2286,22 @@ Cursor getCursorForIndex(Cursor cursor, unsigned int index) {
   int abs_column = 0;
 
   FileNode* file_node = cursor.file_id.file;
+
   while (file_node->prev != NULL) {
     file_node = file_node->prev;
   }
 
-  int current_index = 0;
-  while (current_index + file_node->byte_count < index) {
-    current_index += file_node->byte_count;
-    file_node = file_node->next;
+  // Jump file nodes using absolute_byte_offset
+  while (file_node->next != NULL && file_node->next->absolute_byte_offset < index) {
     abs_row += file_node->element_number;
-    assert(file_node != NULL); // INDEX OUT OF BOUNDS.
+    file_node = file_node->next;
   }
 
+  int current_index = file_node->absolute_byte_offset;
+
   int i = 0;
-  while (current_index + file_node->lines_byte_count[i] < index) {
-    current_index += file_node->lines_byte_count[i];
+  while (current_index + file_node->lines_byte_count[i] + 1 < index) {
+    current_index += file_node->lines_byte_count[i] + 1;
     i++;
     assert(i < file_node->element_number);
   }
@@ -2289,19 +2310,26 @@ Cursor getCursorForIndex(Cursor cursor, unsigned int index) {
   abs_row += i;
 
   LineNode* line_node = file_node->lines + i;
-  while (current_index + line_node->byte_count < index) {
+  while (line_node->next != NULL && current_index + line_node->byte_count < index) {
     current_index += line_node->byte_count;
     abs_column += line_node->element_number;
     line_node = line_node->next;
-    assert(line_node != NULL);
   }
 
   int j = 0;
   int saved_size = 0;
-  while (current_index + (saved_size = utf8_size(line_node->ch[j])) < index) {
-    current_index += saved_size;
-    j++;
-    assert(j < line_node->element_number);
+  if (line_node->byte_count == line_node->element_number) {
+    int remaining = index - current_index;
+    if (remaining > line_node->element_number) {
+      remaining = line_node->element_number;
+    }
+    j = remaining;
+  }
+  else {
+    while (j < line_node->element_number && current_index + (saved_size = utf8_size(line_node->ch[j])) < index) {
+      current_index += saved_size;
+      j++;
+    }
   }
 
   abs_column += j;

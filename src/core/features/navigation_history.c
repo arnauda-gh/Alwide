@@ -244,8 +244,6 @@ void handleNavigationHistoryEvent(struct EditorContext* ctx, const NavigationLoc
         }
         back->items[MAX_NAV_HISTORY - 1] = *prev_loc;
       }
-      notifyUser(ctx, LOG_INFO, "handle_navigation_history_event: pushed file switch from %s to %s, back size=%d",
-                 prev_loc->file_path, curr_loc.file_path, back->size);
       ctx->nav_history.forward_stack.size = 0;
     }
     return;

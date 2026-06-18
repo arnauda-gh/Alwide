@@ -57,7 +57,7 @@ void gui_switchFEW(gui_Context* gui_context) {
     gui_context->few_context.few = newwin(0, gui_context->few_context.few_width, 0, 0);
     gui_context->few_context.refresh_few = true;
     wbkgd(gui_context->few_context.few, COLOR_PAIR(DEFAULT_COLOR_PAIR));
-    gui_context->focused_panel = PANEL_FILE_EXPLORER;
+    gui_context->focused_panel = PANEL_EDITOR;
   }
   else {
     // Close File Explorer Window
@@ -72,7 +72,6 @@ void gui_switchFEW(gui_Context* gui_context) {
   // Resize Editor Window
   gui_resizeEDW(gui_context, -1);
 }
-
 
 
 #define SELECTED_ATTRIBUTE (A_STANDOUT | A_DIM)
@@ -186,6 +185,7 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
 
 void gui_repaintFEW(gui_FEW* context, ExplorerFolder* pwd, bool is_focused) {
   if (!(context->refresh_few == true && context->few_width != 0 && context->few != NULL)) {
+    context->refresh_few = false;
     return;
   }
   fprintf(stderr, "print FEW\n");

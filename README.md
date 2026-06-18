@@ -30,7 +30,7 @@ projects.
   It’s the friendliest way to work in a terminal.
 - **Sublime-Inspired:** We aim to bring the speed and "vibe" of Sublime Text to the terminal, extended with powerful
   modern features like LSP.
-- **Fast & Lightweight:** Written in pure C. It starts in milliseconds, with a single binary size of around 10MB.
+- **Fast & Lightweight:** Written in pure C. It starts in milliseconds, with a single binary size of around 3MB.
 - **Advanced Features:** Built-in **Tree-sitter** for high-quality syntax highlighting and **LSP** support for VS
   Code-like intelligence (completions, hover docs, and goto definition) directly in your terminal.
 - **Persistent State:** Alwide provides a fully persistent experience. Quit and reopen files as if nothing happened—your
@@ -79,23 +79,6 @@ Here are some example of lsp servers :
 | **VHDL**                    | `vhdl_ls`                     | `cargo install rust_hdl`                      |
 | **Assembly**                | `asm-lsp`                     | `asm-lsp` binary                              |
 | **Latex**                   | `texlab`                      | `texlab` package                              |
-
----
-
-## Essential Shortcuts
-
-| Shortcut           | Action                      |
-|:-------------------|:----------------------------|
-| `Ctrl + S`         | **Save** & Auto-format      |
-| `Ctrl + Q`         | **Quit** Alwide             |
-| `Ctrl + E`         | **File Explorer** toggle    |
-| `Ctrl + O`         | **Open File** toggle        |
-| `Ctrl + Space`     | **Completion Popup** toggle |
-| `Ctrl + W`         | **Close** Current Tab       |
-| `Ctrl + Shift + /` | **Toggle Comment**          |
-| `Ctrl + R`         | **Format** Code (LSP)       |
-| `Ctrl + Z/Y`       | **Undo / Redo**             |
-| `Shift + Arrows`   | **Select Text**             |
 
 ---
 
@@ -256,6 +239,112 @@ To install it via Nix:
 ```bash
 nix profile install .
 ```
+
+---
+
+
+## Keyboard & Mouse Shortcuts
+
+Alwide features a comprehensive list of shortcuts and mouse gestures designed to provide a modern, mouse-friendly, but also keyboard-efficient IDE experience in the terminal.
+
+Note that for now the shortcut are static defined in the raw code but will be later available to be changed. Note that it's pretty easy to changes thoses keybindings editing `editor_input.c` file.
+
+### Mouse & Rich Interactive Gestures
+
+| Gesture | Action |
+|:---|:---|
+| `Left Click` | Position the cursor at the clicked character. |
+| `Left Click & Drag` | Select text dynamically. |
+| `Double Click` | Select the word under the cursor. |
+| `Ctrl + Left Click` | **Go to Definition** of the clicked symbol (via LSP). |
+| `Ctrl + Mouse Hover` | **Show Hover Docs** / type tooltips for the hovered symbol (via LSP). |
+| `Scroll Wheel` | Scroll the editor viewport vertically. |
+| `Shift + Scroll Wheel` | Scroll the editor viewport horizontally. |
+| `Mouse Side Buttons (8 / 9)`| Navigate Backward / Forward in jump history. |
+| `Left Click` on Tabs | Switch active document tab. |
+| `Drag & Drop` on Tabs | Reorder active document tabs. |
+| `Scroll Wheel` on Tabs | Scroll through document tabs. |
+| `Double Click` in Explorer | Open file (switch focus to editor) or expand/collapse folder. |
+| `Right Click` in Explorer | Open context menu (New File, New Folder, Rename, Delete). |
+| `Click` on Language (Status Bar) | Open language selector popup. |
+
+### General Keyboard Shortcuts
+
+| Shortcut | Action |
+|:---|:---|
+| `Ctrl + S` | **Save** active file & auto-format (via LSP). |
+| `Ctrl + W` | **Close** current document tab. |
+| `Ctrl + Q` | **Quit** Alwide (prompts to save if files are modified). |
+| `Ctrl + Z` | **Undo** last edit. |
+| `Ctrl + Y` | **Redo** last undone edit. |
+| `Ctrl + F` | **Search / Find** (pre-fills search input with current selection). |
+| `Ctrl + R` | **Format** code manually (via LSP). |
+
+### Navigation & Selection
+
+| Shortcut | Action |
+|:---|:---|
+| `Arrow Keys` | Move cursor character-by-character / line-by-line. |
+| `Shift + Arrow Keys` | **Select text** character-by-character / line-by-line. |
+| `Ctrl + Left / Right` | Move cursor to previous / next word boundary. |
+| `Ctrl + Shift + Left / Right`| **Select text** word-by-word. |
+| `Ctrl + Up / Down` | Select the word under the cursor. |
+| `Ctrl + Shift + Up / Down` | Switch to the next / previous opened tab. |
+| `Ctrl + I / J / K / N` | Alternate navigation (Up / Left / Right / Down). |
+| `Ctrl + Shift + I / J / K / N`| Alternate selection (Up / Left / Right / Down). |
+| `Home` | Move cursor to start of line. |
+| `End` or `Ctrl + ;` | Move cursor to end of line. |
+| `Shift + End` | **Select text** to the end of the line. |
+| `Ctrl + A` | **Select all** text in the active buffer. |
+| `Ctrl + U` | Navigate backward in cursor jump history. |
+| `Ctrl + P` | Navigate forward in cursor jump history. |
+
+### Text Editing & Manipulation
+
+| Shortcut | Action |
+|:---|:---|
+| `Enter` | Insert new line (inherits indentation from the line above). |
+| `Shift + Enter` | Move cursor to end of line and insert new line. |
+| `Tab` | Indent selection (if multi-line) or insert indentation characters. |
+| `Shift + Tab` | De-indent selection (if multi-line). |
+| `Backspace` | Delete character to the left (or delete selection). |
+| `Delete` / `Suppr` | Delete character to the right (or delete selection). |
+| `Ctrl + Backspace` / `Ctrl + H`| Delete the word to the left of the cursor. |
+| `Ctrl + Delete` / `Ctrl + Suppr`| Delete the word to the right of the cursor. |
+| `Ctrl + D` | **Delete current line** (or delete selection). |
+| `Ctrl + Shift + /` or `Ctrl + _`| **Toggle comment** on current line / selection. |
+
+### Window & Panel Focus
+
+| Shortcut | Action |
+|:---|:---|
+| `Ctrl + E` | Toggle **File Explorer** (FEW) sidebar. |
+| `Ctrl + L` | Toggle **Open Files** (OFW) tab list popup. |
+| `Ctrl + B` | Toggle **Status / Diagnostics** sidebar. |
+| `Ctrl + Space` | Trigger auto-completion popup. |
+| `Escape` or `Ctrl + [` | Close current popup or clear selection. |
+
+### Sidebar (File Explorer) View Mode
+
+When the File Explorer sidebar is focused, use the following shortcuts:
+
+| Shortcut | Action |
+|:---|:---|
+| `Up` / `k` or `Down` / `j` | Navigate up / down the directory tree. |
+| `Enter` / `Space` | Toggle folder expand state, or open selected file. |
+| `R` / `F5` | Reload folder tree from disk. |
+| `Escape` | Switch focus back to the editor window. |
+
+### Popup List Interaction (Completion / Goto list)
+
+When a popup list (e.g., autocompletions or Goto Definition list) is open:
+
+| Shortcut | Action |
+|:---|:---|
+| `Up` / `Down` | Move selection highlight. |
+| `Enter` / `Tab` | Accept and insert selection. |
+| `Escape` | Cancel and close popup. |
+
 
 ---
 

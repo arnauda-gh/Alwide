@@ -87,7 +87,10 @@ bool kitty_parse_sequence(int first_char, KittyKeyEvent* event, MEVENT* mouse_ev
       mouse_event->bstate = 0;
 
       int base_button = button;
-      if (button >= 64) {
+      if (button >= 128) {
+        base_button = (button & 3) + 128;
+      }
+      else if (button >= 64) {
         base_button = (button & 3) + 64;
       }
       else {
@@ -115,6 +118,12 @@ bool kitty_parse_sequence(int first_char, KittyKeyEvent* event, MEVENT* mouse_ev
       }
       else if (base_button == 67) {
         mouse_event->bstate |= BUTTON7_PRESSED;
+      }
+      else if (base_button == 128) {
+        mouse_event->bstate |= BUTTON8_PRESSED;
+      }
+      else if (base_button == 129) {
+        mouse_event->bstate |= BUTTON9_PRESSED;
       }
       else if (base_button == 0) {
         if (terminator == 'M') {
@@ -164,7 +173,10 @@ bool kitty_parse_sequence(int first_char, KittyKeyEvent* event, MEVENT* mouse_ev
 
       int button = b - 32;
       int base_button = button;
-      if (button >= 64) {
+      if (button >= 128) {
+        base_button = (button & 3) + 128;
+      }
+      else if (button >= 64) {
         base_button = (button & 3) + 64;
       }
       else {
@@ -192,6 +204,12 @@ bool kitty_parse_sequence(int first_char, KittyKeyEvent* event, MEVENT* mouse_ev
       }
       else if (base_button == 67) {
         mouse_event->bstate |= BUTTON7_PRESSED;
+      }
+      else if (base_button == 128) {
+        mouse_event->bstate |= BUTTON8_PRESSED;
+      }
+      else if (base_button == 129) {
+        mouse_event->bstate |= BUTTON9_PRESSED;
       }
       else if (base_button == 0) {
         mouse_event->bstate |= BUTTON1_PRESSED;

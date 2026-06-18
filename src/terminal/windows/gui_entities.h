@@ -69,9 +69,10 @@ typedef struct {
   WINDOW* sbw; // Status Bar Window
 
   // Local data
-  bool refresh_edw; // Need to reprint editor window
-  bool show_sbw;    // Status Bar Toggle
-  bool sbw_hovered; // Status Bar Hover state
+  bool refresh_edw;        // Need to reprint editor window
+  bool show_sbw;           // Status Bar Toggle
+  bool sbw_hovered;        // Status Bar Hover state
+  bool sbw_button_hovered; // Status Bar Button Hover state
 
   // lnw vars
   int length_line_number;
