@@ -44,6 +44,8 @@ static inline bool is_scroll_up(const MEVENT* m) { return m->bstate & BUTTON4_PR
 static inline bool is_scroll_down(const MEVENT* m) { return m->bstate & BUTTON5_PRESSED; }
 static inline bool is_scroll_left(const MEVENT* m) { return m->bstate & BUTTON6_PRESSED; }
 static inline bool is_scroll_right(const MEVENT* m) { return m->bstate & BUTTON7_PRESSED; }
+static inline bool is_button8_pressed(const MEVENT* m) { return m->bstate & BUTTON8_PRESSED; }
+static inline bool is_button9_pressed(const MEVENT* m) { return m->bstate & BUTTON9_PRESSED; }
 
 static inline bool is_shift_active(const MEVENT* m) { return m->bstate & BUTTON_SHIFT; }
 static inline bool is_ctrl_active(const MEVENT* m) { return m->bstate & BUTTON_CTRL; }
@@ -117,6 +119,15 @@ static void handle_editor_interaction(EditorContext* ctx) {
 }
 
 void handleClick(EditorContext* ctx) {
+  if (is_button8_pressed(&ctx->m_event)) {
+    navigateBack(ctx);
+    return;
+  }
+  if (is_button9_pressed(&ctx->m_event)) {
+    navigateForward(ctx);
+    return;
+  }
+
   if (is_left_click_pressed(&ctx->m_event) && !ctx->mouse_drag) {
     ctx->mouse_drag = true;
   }

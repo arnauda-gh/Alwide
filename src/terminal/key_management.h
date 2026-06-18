@@ -146,6 +146,13 @@
 #ifndef BUTTON7_PRESSED
 #define BUTTON7_PRESSED 0x80000000
 #endif
+#ifndef BUTTON8_PRESSED
+#define BUTTON8_PRESSED 0x100000000ULL
+#endif
+#ifndef BUTTON9_PRESSED
+#define BUTTON9_PRESSED 0x200000000ULL
+#endif
+
 
 void detectComplexMouseEvents(MEVENT* event);
 void printEventList(MEVENT* event);
