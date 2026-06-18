@@ -268,6 +268,7 @@ int getAbsoluteFileIndex(FileIdentifier id);
 LineNode* getLineForFileIdentifier(FileIdentifier id);
 
 bool checkFileIntegrity(FileNode* file);
+void rebindFullFileNode(FileNode* file);
 
 bool printByteCount(FileNode* file);
 

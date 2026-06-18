@@ -2279,8 +2279,8 @@ Cursor getCursorForIndex(Cursor cursor, unsigned int index) {
   }
 
   int i = 0;
-  while (current_index + file_node->lines_byte_count[i] < index) {
-    current_index += file_node->lines_byte_count[i];
+  while (current_index + file_node->lines_byte_count[i] + 1 < index) {
+    current_index += file_node->lines_byte_count[i] + 1;
     i++;
     assert(i < file_node->element_number);
   }
@@ -2289,19 +2289,17 @@ Cursor getCursorForIndex(Cursor cursor, unsigned int index) {
   abs_row += i;
 
   LineNode* line_node = file_node->lines + i;
-  while (current_index + line_node->byte_count < index) {
+  while (line_node->next != NULL && current_index + line_node->byte_count < index) {
     current_index += line_node->byte_count;
     abs_column += line_node->element_number;
     line_node = line_node->next;
-    assert(line_node != NULL);
   }
 
   int j = 0;
   int saved_size = 0;
-  while (current_index + (saved_size = utf8_size(line_node->ch[j])) < index) {
+  while (j < line_node->element_number && current_index + (saved_size = utf8_size(line_node->ch[j])) < index) {
     current_index += saved_size;
     j++;
-    assert(j < line_node->element_number);
   }
 
   abs_column += j;
