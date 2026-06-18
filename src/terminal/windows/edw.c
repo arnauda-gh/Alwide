@@ -26,6 +26,8 @@ void gui_initEDWContext(gui_EDW* context) {
 
   context->refresh_edw = true; // Need to reprint editor window
   context->show_sbw = true;    // Status bar visible by default
+  context->sbw_hovered = false;
+  context->sbw_button_hovered = false;
   context->length_line_number = 0;
 
   // popup init values
@@ -446,7 +448,7 @@ void gui_repaintSBW(gui_EDW* context, FileContainer* fc) {
       strncpy(path_display, temp, sizeof(path_display));
       path_display[sizeof(path_display) - 1] = '\0';
     }
-    snprintf(left_str, sizeof(left_str), " %s", path_display);
+    snprintf(left_str, sizeof(left_str), "%s", path_display);
   }
 
   // Format right-aligned string elements
@@ -494,8 +496,23 @@ void gui_repaintSBW(gui_EDW* context, FileContainer* fc) {
   wmove(context->sbw, 0, 0);
   whline(context->sbw, ' ', width);
 
-  // Print left-aligned text (file name)
-  mvwprintw(context->sbw, 0, 2, "%s%s", left_str, isFileEdited(fc) ? " *" : "");
+  // Measure button width dynamically
+  int button_rows = 0;
+  int button_cols = 0;
+  countStringFrame(STATUS_BAR_BUTTON_TEXT, strlen(STATUS_BAR_BUTTON_TEXT), &button_rows, &button_cols, NULL, tab_size);
+
+  // Print the switch button with hover animation
+  if (context->sbw_button_hovered) {
+    wattron(context->sbw, A_REVERSE | A_BOLD);
+    mvwaddstr(context->sbw, 0, 0, STATUS_BAR_BUTTON_TEXT);
+    wattroff(context->sbw, A_REVERSE | A_BOLD);
+  }
+  else {
+    mvwaddstr(context->sbw, 0, 0, STATUS_BAR_BUTTON_TEXT);
+  }
+
+  // Print left-aligned text (file name) starting at x = button_cols + 1
+  mvwprintw(context->sbw, 0, button_cols + 1, "%s%s", left_str, isFileEdited(fc) ? " *" : "");
 
   // print the right-aligned text
   wmove(context->sbw, 0, width - str_len);

@@ -27,6 +27,7 @@ void gui_resizeOFW(gui_Context* gui_context) {
 
 void gui_repaintOFW(gui_OFW* context, FileContainer* files, int file_count, int current_file) {
   if (!((context->refresh_ofw == true || files[current_file].io_file.status == NONE) && context->ofw_height != 0)) {
+    context->refresh_ofw = false;
     return;
   }
   fprintf(stderr, "print OFW\n");
