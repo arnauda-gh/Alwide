@@ -15,7 +15,7 @@ void handleClick(EditorContext* ctx);
 
 ////// -------------- CLICK FUNCTIONS --------------
 
-void handleEditorClick(gui_Context* gui_context, Cursor* cursor, Cursor* select_cursor, int* desired_column,
+void handleEditorClick(EditorContext* ctx, Cursor* cursor, Cursor* select_cursor, int* desired_column,
                        int* screen_x, int* screen_y, MEVENT* m_event, bool mouse_drag, FileContainer* file,
                        WindowHighlightDescriptor* highlight_descriptor);
 

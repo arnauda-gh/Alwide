@@ -74,7 +74,6 @@ void gui_switchFEW(gui_Context* gui_context) {
 }
 
 
-
 #define SELECTED_ATTRIBUTE (A_STANDOUT | A_DIM)
 
 void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_offset, int* few_y_offset,
@@ -186,6 +185,7 @@ void internalPrintExplorerRec(ExplorerFolder* folder, WINDOW* few, int* few_x_of
 
 void gui_repaintFEW(gui_FEW* context, ExplorerFolder* pwd, bool is_focused) {
   if (!(context->refresh_few == true && context->few_width != 0 && context->few != NULL)) {
+    context->refresh_few = false;
     return;
   }
   fprintf(stderr, "print FEW\n");
