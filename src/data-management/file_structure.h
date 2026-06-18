@@ -57,6 +57,7 @@ typedef struct FileNode_ {
   int element_number;
   int lines_byte_count[MAX_ELEMENT_NODE];
   int byte_count;
+  int absolute_byte_offset;
 } FileNode;
 
 /**
@@ -269,6 +270,7 @@ LineNode* getLineForFileIdentifier(FileIdentifier id);
 
 bool checkFileIntegrity(FileNode* file);
 void rebindFullFileNode(FileNode* file);
+void updateAbsoluteByteOffsets(FileNode* node);
 
 bool printByteCount(FileNode* file);
 

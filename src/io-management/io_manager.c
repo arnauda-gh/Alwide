@@ -190,6 +190,7 @@ bool loadFile(Cursor cursor, char* fileName, LF_Tabulation* tab) {
     fn = fn->next;
   }
 
+  updateAbsoluteByteOffsets(cursor.file_id.file);
   return true;
 }
 
