@@ -442,7 +442,7 @@ bool gui_handleCompletionInput(gui_Context* context, FileContainer* fc, int key,
       }
     }
 
-    if (m_event->bstate & NO_EVENT_MOUSE) {
+    if (m_event->bstate) {
       int clicked_item = context->edw_context.item_select_offset_y + (m_event->y - getbegy(context->edw_context.pow));
       if (clicked_item >= 0 && clicked_item < total_size && clicked_item != context->edw_context.item_selected) {
         context->edw_context.item_selected = clicked_item;
