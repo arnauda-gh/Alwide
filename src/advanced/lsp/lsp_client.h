@@ -11,7 +11,7 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <linux/limits.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <sys/types.h>
 

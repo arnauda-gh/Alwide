@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <cjson/cJSON.h>
-#include <linux/limits.h>
+#include "../lib/cJSON/cJSON.h"
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -10,7 +10,7 @@
 #include "advanced/lsp/lsp_client.h"
 #include "advanced/lsp/lsp_handler.h"
 #include "advanced/tree-sitter/tree_manager.h"
-#include "io_management/workspace_settings.h"
+#include "io-management/workspace_settings.h"
 #include "utils/tools.h"
 
 //     if (poll(&(struct pollfd){.fd = lsp.inpipefd[0], .events = POLLIN}, 1, 0) == 1) {
@@ -22,6 +22,8 @@ cJSON* config;
 ParserList parsers;
 LSPServerLinkedList lsp_servers;
 WorkspaceSettings loaded_settings;
+LF_LanguageFeatureList language_features;
+WorkspaceSettings workspace_settings;
 
 
 int main(int argc, char** args) {
@@ -74,7 +76,7 @@ int main(int argc, char** args) {
         file_content[fsize] = 0;
 
 
-        LSP_notifyLspFileDidOpen(lsp, file_name, file_content);
+        LSP_notifyLspFileDidOpen(&lsp, file_name, file_content);
 
         free(file_content);
         break;
@@ -87,7 +89,7 @@ int main(int argc, char** args) {
         getLocalURI(file_name, uri);
         cJSON_AddStringToObject(text_document, "uri", uri);
 
-        LSP_sendPacketWithJSON(&lsp, "textDocument/semanticTokens/full", tokens_req, REQUEST);
+        LSP_sendPacketWithJSON(&lsp, "textDocument/semanticTokens/full", tokens_req, LSP_REQUEST);
 
         cJSON_Delete(tokens_req);
         break;
@@ -100,7 +102,7 @@ int main(int argc, char** args) {
         getLocalURI(file_name, uri_delta);
         cJSON_AddStringToObject(text_document_delta, "uri", uri_delta);
 
-        LSP_sendPacketWithJSON(&lsp, "textDocument/semanticTokens/full/delta", tokens_req_delta, REQUEST);
+        LSP_sendPacketWithJSON(&lsp, "textDocument/semanticTokens/full/delta", tokens_req_delta, LSP_REQUEST);
 
         cJSON_Delete(tokens_req_delta);
 

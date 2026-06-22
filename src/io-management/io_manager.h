@@ -1,6 +1,6 @@
 #ifndef FILE_MANAGER_H
 #define FILE_MANAGER_H
-#include <linux/limits.h>
+#include <limits.h>
 
 #include "../config/language_feature.h"
 #include "../data-management/file_structure.h"

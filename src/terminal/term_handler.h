@@ -3,6 +3,14 @@
 #include <ncurses.h>
 #include <wchar.h>
 
+/* Determine if the system's ncurses library supports extended color features (ncurses 6.1+) */
+#if defined(NCURSES_VERSION_MAJOR) &&                                                                                  \
+  (NCURSES_VERSION_MAJOR > 6 || (NCURSES_VERSION_MAJOR == 6 && NCURSES_VERSION_MINOR >= 1))
+#define AL_HAS_EXTENDED_NCURSES_COLORS 1
+#else
+#define AL_HAS_EXTENDED_NCURSES_COLORS 0
+#endif
+
 #include "../data-management/file_management.h"
 #include "../data-management/file_structure.h"
 #include "../io-management/io_explorer.h"
@@ -52,7 +60,6 @@ int getScreenXForCursor(Cursor cursor, int screen_x, int tab_size);
 LineIdentifier getLineIdForScreenX(LineIdentifier line_id, int screen_x, int x_click, int tab_size);
 
 void setDesiredColumn(Cursor cursor, int* desired_column);
-
 
 
 #endif // NCURSES_HANDLER_H

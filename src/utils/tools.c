@@ -4,12 +4,10 @@
 #include "../data-management/encoding/utf8.h"
 #include "../data-management/file_management.h"
 
-#include <asm-generic/errno-base.h>
+#include <errno.h>
 #include <assert.h>
 #include <ctype.h>
-#include <errno.h>
 #include <limits.h>
-#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
