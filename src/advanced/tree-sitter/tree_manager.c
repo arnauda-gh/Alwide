@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../lib/tree-sitter/lib/include/tree_sitter/api.h"
+#include <tree_sitter/api.h>
 #include "../../environnement/constants.h"
 #include "../../environnement/global_variables.h"
 #include "../../terminal/highlight.h"

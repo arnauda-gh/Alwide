@@ -2,7 +2,7 @@
 #define TREE_MANAGER_H
 #include <regex.h>
 
-#include "../../../lib/tree-sitter/lib/include/tree_sitter/api.h"
+#include <tree_sitter/api.h>
 #include "../../config/language_feature.h"
 #include "../../data-management/state_control.h"
 #include "../../environnement/constants.h"

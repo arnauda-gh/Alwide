@@ -32,7 +32,31 @@ PKG_CONFIG ?= pkg-config
 NCURSES_CFLAGS := $(shell $(PKG_CONFIG) --cflags ncursesw 2>/dev/null || echo "")
 NCURSES_LIBS := $(shell $(PKG_CONFIG) --libs ncursesw 2>/dev/null || echo "-lncursesw -ltinfo")
 
-CFLAGS = $(MODE_CFLAGS) -Ilib/tree-sitter/lib/src -Ilib/tree-sitter/lib/include -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600 $(NCURSES_CFLAGS) -DDATADIR=\"$(DATADIR)\"
+# Options to use system-installed dependencies instead of bundled libraries in lib/
+USE_SYSTEM_CJSON ?= 0
+USE_SYSTEM_TREESITTER ?= 0
+USE_SYSTEM_GRAMMARS ?= 0
+
+# Compiler configurations based on options
+ifeq ($(USE_SYSTEM_CJSON),1)
+  CJSON_LIBS := $(shell $(PKG_CONFIG) --libs libcjson 2>/dev/null || echo "-lcjson")
+  CJSON_CFLAGS := $(shell $(PKG_CONFIG) --cflags libcjson 2>/dev/null || echo "")
+else
+  CJSON_LIBS :=
+  CJSON_CFLAGS := -Ilib
+  LIB_C_CJSON := lib/cjson/cJSON.c
+endif
+
+ifeq ($(USE_SYSTEM_TREESITTER),1)
+  TREESITTER_LIBS := $(shell $(PKG_CONFIG) --libs tree-sitter 2>/dev/null || echo "-ltree-sitter")
+  TREESITTER_CFLAGS := $(shell $(PKG_CONFIG) --cflags tree-sitter 2>/dev/null || echo "")
+else
+  TREESITTER_LIBS :=
+  TREESITTER_CFLAGS := -Ilib/tree-sitter/lib/src -Ilib/tree-sitter/lib/include
+  LIB_C_TREESITTER := lib/tree-sitter/lib/src/lib.c
+endif
+
+CFLAGS = $(MODE_CFLAGS) $(CJSON_CFLAGS) $(TREESITTER_CFLAGS) -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600 $(NCURSES_CFLAGS) -DDATADIR=\"$(DATADIR)\"
 
 # Write the mode and CFLAGS tracking files at parse time if they have changed
 $(shell mkdir -p $(BUILD_DIR))
@@ -109,12 +133,34 @@ SRC_MODULES= \
 	src/environnement/setup.c
 
 # C Library sources
-LIB_C_MODULES= \
-	lib/cJSON/cJSON.c \
-	lib/tree-sitter/lib/src/lib.c
+LIB_C_MODULES = $(LIB_C_CJSON) $(LIB_C_TREESITTER)
 
-# Rust Libraries (keep as .rlib)
-RUST_MODULES= \
+ifeq ($(USE_SYSTEM_GRAMMARS),1)
+  GRAMMAR_LIBS := -ltree-sitter-c \
+                  -ltree-sitter-python \
+                  -ltree-sitter-java \
+                  -ltree-sitter-cpp \
+                  -ltree-sitter-c-sharp \
+                  -ltree-sitter-make \
+                  -ltree-sitter-css \
+                  -ltree-sitter-dart \
+                  -ltree-sitter-go \
+                  -ltree-sitter-javascript \
+                  -ltree-sitter-json \
+                  -ltree-sitter-bash \
+                  -ltree-sitter-markdown \
+                  -ltree-sitter-query \
+                  -ltree-sitter-vhdl \
+                  -ltree-sitter-lua \
+                  -ltree-sitter-asm \
+                  -ltree-sitter-html \
+                  -ltree-sitter-latex \
+                  -ltree-sitter-ini
+  RUST_MODULES :=
+else
+  GRAMMAR_LIBS :=
+  # Rust Libraries (keep as .rlib)
+  RUST_MODULES= \
 	lib/tree-sitter-c/target/release/libtree_sitter_c.rlib \
 	lib/tree-sitter-python/target/release/libtree_sitter_python.rlib \
 	lib/tree-sitter-java/target/release/libtree_sitter_java.rlib \
@@ -135,11 +181,12 @@ RUST_MODULES= \
 	lib/tree-sitter-html/target/release/libtree_sitter_html.rlib \
 	lib/tree-sitter-latex/target/release/libtree_sitter_latex.rlib \
 	lib/tree-sitter-ini/target/release/libtree_sitter_ini.rlib
+endif
 
 # Map sources to objects in BUILD_DIR
 OBJECTS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_MODULES) $(LIB_C_MODULES))
 
-SHARED_LIBS = $(NCURSES_LIBS)
+SHARED_LIBS = $(NCURSES_LIBS) $(CJSON_LIBS) $(TREESITTER_LIBS) $(GRAMMAR_LIBS)
 
 all: $(OBJECTS) $(RUST_MODULES) $(executable)
 
