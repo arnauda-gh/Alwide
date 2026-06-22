@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <cjson/cJSON.h>
+#include "../lib/cJSON/cJSON.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +22,8 @@ cJSON* config;
 ParserList parsers;
 LSPServerLinkedList lsp_servers;
 WorkspaceSettings loaded_settings;
+LF_LanguageFeatureList language_features;
+WorkspaceSettings workspace_settings;
 
 
 int main(int argc, char** args) {

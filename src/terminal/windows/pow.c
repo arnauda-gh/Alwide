@@ -413,14 +413,14 @@ bool gui_handleCompletionInput(gui_Context* context, FileContainer* fc, int key,
         gui_updateEDW(context);
       }
     }
-    #ifdef BUTTON5_PRESSED
-      else if (m_event->bstate & BUTTON5_PRESSED) {
-        if (context->edw_context.item_select_offset_y + height < total_size) {
-          context->edw_context.item_select_offset_y++;
-          gui_updateEDW(context);
-        }
+#ifdef BUTTON5_PRESSED
+    else if (m_event->bstate & BUTTON5_PRESSED) {
+      if (context->edw_context.item_select_offset_y + height < total_size) {
+        context->edw_context.item_select_offset_y++;
+        gui_updateEDW(context);
       }
-    #endif
+    }
+#endif
     else if (m_event->bstate & (BUTTON1_PRESSED)) {
       int clicked_item = context->edw_context.item_select_offset_y + (m_event->y - getbegy(context->edw_context.pow));
       if (clicked_item >= 0 && clicked_item < total_size) {
@@ -512,14 +512,14 @@ bool gui_handleGotoChoiceInput(gui_Context* context, FileContainer* fc, int key,
         gui_updateEDW(context);
       }
     }
-    #ifdef BUTTON5_PRESSED
-      else if (m_event->bstate & BUTTON5_PRESSED) {
-        if (context->edw_context.item_select_offset_y + items_per_page < item_count) {
-          context->edw_context.item_select_offset_y++;
-          gui_updateEDW(context);
-        }
+#ifdef BUTTON5_PRESSED
+    else if (m_event->bstate & BUTTON5_PRESSED) {
+      if (context->edw_context.item_select_offset_y + items_per_page < item_count) {
+        context->edw_context.item_select_offset_y++;
+        gui_updateEDW(context);
       }
-    #endif
+    }
+#endif
     else if (m_event->bstate) {
       int clicked_item =
         context->edw_context.item_select_offset_y + (m_event->y - getbegy(context->edw_context.pow) - 1);

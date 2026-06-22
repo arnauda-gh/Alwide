@@ -415,18 +415,25 @@ TextPartHighlightDescriptor* whd_tphd_forCursorWithOffsetIndex(WindowHighlightDe
 
 void initColorsForTheme(HighlightThemeList theme_list, int* color_index, int* color_pair) {
 #if AL_HAS_EXTENDED_NCURSES_COLORS
-  // Setup color theme.
-  for (int i = 0; i < theme_list.size; i++) {
-    init_extended_color((*color_index)++, theme_list.groups[i].color.r, theme_list.groups[i].color.g,
-                        theme_list.groups[i].color.b);
-    init_extended_pair(*color_pair, *color_index - 1, BG_COLOR_DEFAULT);
-    theme_list.groups[i].color_n = *color_pair;
+  if (COLORS >= 256) {
+    // Setup color theme.
+    for (int i = 0; i < theme_list.size; i++) {
+      init_extended_color((*color_index)++, theme_list.groups[i].color.r, theme_list.groups[i].color.g,
+                          theme_list.groups[i].color.b);
+      init_extended_pair(*color_pair, *color_index - 1, BG_COLOR_DEFAULT);
+      theme_list.groups[i].color_n = *color_pair;
 
-    init_extended_color((*color_index)++, theme_list.groups[i].color_hover.r, theme_list.groups[i].color_hover.g,
-                        theme_list.groups[i].color_hover.b);
-    init_extended_pair(*color_pair + 1000, *color_index - 1, BG_COLOR_HOVER);
-    theme_list.groups[i].color_hover_n = *color_pair + 1000;
-    (*color_pair)++;
+      init_extended_color((*color_index)++, theme_list.groups[i].color_hover.r, theme_list.groups[i].color_hover.g,
+                          theme_list.groups[i].color_hover.b);
+      init_extended_pair(*color_pair + 1000, *color_index - 1, BG_COLOR_HOVER);
+      theme_list.groups[i].color_hover_n = *color_pair + 1000;
+      (*color_pair)++;
+    }
+  }
+  else {
+    (void)theme_list;
+    (void)color_index;
+    (void)color_pair;
   }
 #else
   (void)theme_list;
