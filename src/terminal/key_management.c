@@ -44,9 +44,16 @@ void printEventList(MEVENT* event) {
   printIfPresent(event, BUTTON4_RELEASED, "BUTTON4_RELEASED");
   printIfPresent(event, BUTTON4_CLICKED, "BUTTON4_CLICKED");
 
-  printIfPresent(event, BUTTON5_PRESSED, "BUTTON5_PRESSED");
-  printIfPresent(event, BUTTON5_RELEASED, "BUTTON5_RELEASED");
-  printIfPresent(event, BUTTON5_CLICKED, "BUTTON5_CLICKED");
+  // BUTTON5_* is not available on all ncurses implementations, e.g. macOS.
+  #ifdef BUTTON5_PRESSED
+    printIfPresent(event, BUTTON5_PRESSED, "BUTTON5_PRESSED");
+  #endif
+  #ifdef BUTTON5_RELEASED
+    printIfPresent(event, BUTTON5_RELEASED, "BUTTON5_RELEASED");
+  #endif
+  #ifdef BUTTON5_CLICKED
+    printIfPresent(event, BUTTON5_CLICKED, "BUTTON5_CLICKED");
+  #endif
 
   printIfPresent(event, BUTTON6_PRESSED, "BUTTON6_PRESSED");
   printIfPresent(event, BUTTON7_PRESSED, "BUTTON7_PRESSED");
@@ -124,13 +131,15 @@ void detectComplexMouseEvents(MEVENT* event) {
     tmp_event.z = event->z;
   }
 
-  if (event->bstate & BUTTON5_PRESSED) {
-    MEVENT tmp_event;
-    tmp_event.bstate = BUTTON5_RELEASED;
-    tmp_event.x = event->x;
-    tmp_event.y = event->y;
-    tmp_event.z = event->z;
-  }
+  #ifdef BUTTON5_PRESSED
+    if (event->bstate & BUTTON5_PRESSED) {
+      MEVENT tmp_event;
+      tmp_event.bstate = BUTTON5_RELEASED;
+      tmp_event.x = event->x;
+      tmp_event.y = event->y;
+      tmp_event.z = event->z;
+    }
+  #endif
 }
 
 int normalize_legacy(int c) {

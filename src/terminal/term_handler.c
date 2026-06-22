@@ -19,6 +19,14 @@
 #include "windows/ofw.h"
 #include "windows/tpw.h"
 
+/* macOS system ncurses may expose NCURSES_EXT_COLORS internally without
+ * declaring init_extended_color/init_extended_pair. Use basic color pairs there.
+ */
+#ifdef __APPLE__
+  #define AL_HAS_EXTENDED_NCURSES_COLORS 0
+#else
+  #define AL_HAS_EXTENDED_NCURSES_COLORS 1
+#endif
 
 ////// -------------- WINDOWS MANAGEMENTS --------------
 
@@ -62,28 +70,44 @@ void gui_initNCurses(gui_Context* gui_context) {
     start_color();
     use_default_colors();
 
+    #if AL_HAS_EXTENDED_NCURSES_COLORS
     // Check if we can change colors. If not, we'll stick to default palette.
-    if (can_change_color()) {
-      init_extended_color(BG_COLOR_DEFAULT, 50, 50, 50);
-      init_extended_color(BG_COLOR_HOVER, 200, 200, 200);
-      init_extended_color(BG_COLOR_POPUP, 100, 100, 100);
-      init_extended_color(COLOR_CYAN, 100, 700, 650);
-      init_extended_color(COLOR_TRUE_WHITE, 1000, 1000, 1000);
-    }
-
-    init_extended_pair(DEFAULT_COLOR_PAIR, COLOR_WHITE, BG_COLOR_DEFAULT);
-    init_extended_pair(DEFAULT_COLOR_HOVER_PAIR, COLOR_WHITE, BG_COLOR_HOVER);
-
-    init_extended_pair(ERROR_COLOR_PAIR, COLOR_RED, BG_COLOR_POPUP);
-    init_extended_pair(ERROR_COLOR_HOVER_PAIR, COLOR_RED, BG_COLOR_HOVER);
-
-    init_extended_pair(WARNING_COLOR_PAIR, COLOR_YELLOW, BG_COLOR_POPUP);
-    init_extended_pair(WARNING_COLOR_HOVER_PAIR, COLOR_YELLOW, BG_COLOR_HOVER);
-
-    init_extended_pair(INFO_COLOR_PAIR, COLOR_CYAN, BG_COLOR_POPUP);
-    init_extended_pair(INFO_COLOR_HOVER_PAIR, COLOR_CYAN, BG_COLOR_HOVER);
-
-    init_extended_pair(STATUS_BAR_COLOR_PAIR, COLOR_TRUE_WHITE, BG_COLOR_HOVER);
+      if (can_change_color()) {
+        init_extended_color(BG_COLOR_DEFAULT, 50, 50, 50);
+        init_extended_color(BG_COLOR_HOVER, 200, 200, 200);
+        init_extended_color(BG_COLOR_POPUP, 100, 100, 100);
+        init_extended_color(COLOR_CYAN, 100, 700, 650);
+        init_extended_color(COLOR_TRUE_WHITE, 1000, 1000, 1000);
+      }
+  
+      init_extended_pair(DEFAULT_COLOR_PAIR, COLOR_WHITE, BG_COLOR_DEFAULT);
+      init_extended_pair(DEFAULT_COLOR_HOVER_PAIR, COLOR_WHITE, BG_COLOR_HOVER);
+  
+      init_extended_pair(ERROR_COLOR_PAIR, COLOR_RED, BG_COLOR_POPUP);
+      init_extended_pair(ERROR_COLOR_HOVER_PAIR, COLOR_RED, BG_COLOR_HOVER);
+  
+      init_extended_pair(WARNING_COLOR_PAIR, COLOR_YELLOW, BG_COLOR_POPUP);
+      init_extended_pair(WARNING_COLOR_HOVER_PAIR, COLOR_YELLOW, BG_COLOR_HOVER);
+  
+      init_extended_pair(INFO_COLOR_PAIR, COLOR_CYAN, BG_COLOR_POPUP);
+      init_extended_pair(INFO_COLOR_HOVER_PAIR, COLOR_CYAN, BG_COLOR_HOVER);
+  
+      init_extended_pair(STATUS_BAR_COLOR_PAIR, COLOR_TRUE_WHITE, BG_COLOR_HOVER);
+      
+    #else
+      // TODO: Find a better macOS color fallback.
+      // macOS system ncurses does not expose init_extended_color/init_extended_pair,
+      // so this currently uses basic color pairs and loses theme colors.
+      init_pair(DEFAULT_COLOR_PAIR, COLOR_WHITE, COLOR_BLACK);
+      init_pair(DEFAULT_COLOR_HOVER_PAIR, COLOR_WHITE, COLOR_BLACK);
+      init_pair(ERROR_COLOR_PAIR, COLOR_RED, COLOR_BLACK);
+      init_pair(ERROR_COLOR_HOVER_PAIR, COLOR_RED, COLOR_BLACK);
+      init_pair(WARNING_COLOR_PAIR, COLOR_YELLOW, COLOR_BLACK);
+      init_pair(WARNING_COLOR_HOVER_PAIR, COLOR_YELLOW, COLOR_BLACK);
+      init_pair(INFO_COLOR_PAIR, COLOR_CYAN, COLOR_BLACK);
+      init_pair(INFO_COLOR_HOVER_PAIR, COLOR_CYAN, COLOR_BLACK);
+      init_pair(STATUS_BAR_COLOR_PAIR, COLOR_WHITE, COLOR_BLACK);
+    #endif
   }
 }
 

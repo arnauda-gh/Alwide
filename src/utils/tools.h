@@ -1,7 +1,7 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#include <linux/limits.h>
+#include <limits.h>
 #include <ncurses.h>
 #include <stdint.h>
 #include <sys/types.h>

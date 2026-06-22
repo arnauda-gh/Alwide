@@ -1,10 +1,11 @@
 #include "clipboard_manager.h"
 
 #include <ctype.h>
-#include <linux/prctl.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
 #include <stdlib.h>
 #include <sys/poll.h>
-#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include "../data-management/file_management.h"
@@ -17,6 +18,13 @@ char* xclip_path;
 char* wl_copy_path;
 char* wl_paste_path;
 
+// PR_SET_PDEATHSIG is specific to Linux. Other platforms can still run the
+// clipboard helper without this extra child-process cleanup behavior.
+static void setChildDeathSignal(void) {
+  #ifdef __linux__
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+  #endif
+}
 
 void createClipBoardTmpDir() { mkdir_p(CLIPBOARD_PATH, 0777); }
 
@@ -99,7 +107,7 @@ bool saveToClipBoard(Cursor begin, Cursor end) {
       dup2(fileno(f_last_clip), STDIN_FILENO);
       fclose(f_last_clip);
 
-      prctl(PR_SET_PDEATHSIG, SIGTERM);
+      setChildDeathSignal();
 
       execl(xclip_path, xclip_path, "-selection", "clipboard", "-in", NULL);
       exit(1);
@@ -116,7 +124,7 @@ bool saveToClipBoard(Cursor begin, Cursor end) {
       dup2(fileno(f_last_clip), STDIN_FILENO);
       fclose(f_last_clip);
 
-      prctl(PR_SET_PDEATHSIG, SIGTERM);
+      setChildDeathSignal();
 
       execl(wl_copy_path, wl_copy_path, NULL);
       exit(1);
@@ -147,7 +155,7 @@ static FILE* openClipboardReader(pid_t* out_child_pid) {
       close(pipe_read[0]);
       close(pipe_read[1]);
 
-      prctl(PR_SET_PDEATHSIG, SIGTERM);
+      setChildDeathSignal();
 
       execl(wl_paste_path, wl_paste_path, "-n", NULL);
       exit(1);
@@ -162,7 +170,7 @@ static FILE* openClipboardReader(pid_t* out_child_pid) {
       close(pipe_read[0]);
       close(pipe_read[1]);
 
-      prctl(PR_SET_PDEATHSIG, SIGTERM);
+      setChildDeathSignal();
 
       execl(xclip_path, xclip_path, "-selection", "clipboard", "-out", NULL);
       exit(1);

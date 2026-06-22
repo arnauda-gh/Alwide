@@ -1,7 +1,7 @@
 #include "tree_manager.h"
 
 #include <assert.h>
-#include <linux/limits.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

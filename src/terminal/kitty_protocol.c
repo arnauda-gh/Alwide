@@ -111,7 +111,9 @@ bool kitty_parse_sequence(int first_char, KittyKeyEvent* event, MEVENT* mouse_ev
         mouse_event->bstate |= BUTTON4_PRESSED;
       }
       else if (base_button == 65) {
-        mouse_event->bstate |= BUTTON5_PRESSED;
+        #ifdef BUTTON5_PRESSED
+          mouse_event->bstate |= BUTTON5_PRESSED;
+        #endif
       }
       else if (base_button == 66) {
         mouse_event->bstate |= BUTTON6_PRESSED;
@@ -197,7 +199,9 @@ bool kitty_parse_sequence(int first_char, KittyKeyEvent* event, MEVENT* mouse_ev
         mouse_event->bstate |= BUTTON4_PRESSED;
       }
       else if (base_button == 65) {
+        #ifdef BUTTON5_PRESSED
         mouse_event->bstate |= BUTTON5_PRESSED;
+        #endif
       }
       else if (base_button == 66) {
         mouse_event->bstate |= BUTTON6_PRESSED;

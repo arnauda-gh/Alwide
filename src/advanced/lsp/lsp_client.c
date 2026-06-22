@@ -1,14 +1,17 @@
 #include "lsp_client.h"
 
+#ifdef __linux__
+  #include <sys/prctl.h>
+#endif
+
 #include <assert.h>
 #include <libgen.h>
-#include <linux/limits.h>
+#include <limits.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/poll.h>
-#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include "../../utils/tools.h"
@@ -68,9 +71,10 @@ bool LSP_openLSPServer(char* name, char* command_args, char* language, LSP_Serve
     dup2(server->inpipefd[1], STDOUT_FILENO);
     // dup2(server->inpipefd[1], STDERR_FILENO); // Do not bind the err channel it's used for lsp_server logs.
 
-
-    // ask kernel to deliver SIGTERM in case the parent dies
-    prctl(PR_SET_PDEATHSIG, SIGTERM);
+    #ifdef __linux__
+      // ask kernel to deliver SIGTERM in case the parent dies
+      prctl(PR_SET_PDEATHSIG, SIGTERM);
+    #endif
 
     // close unused pipe ends
     close(server->outpipefd[1]);

@@ -414,6 +414,7 @@ TextPartHighlightDescriptor* whd_tphd_forCursorWithOffsetIndex(WindowHighlightDe
 
 
 void initColorsForTheme(HighlightThemeList theme_list, int* color_index, int* color_pair) {
+#if AL_HAS_EXTENDED_NCURSES_COLORS
   // Setup color theme.
   for (int i = 0; i < theme_list.size; i++) {
     init_extended_color((*color_index)++, theme_list.groups[i].color.r, theme_list.groups[i].color.g,
@@ -427,4 +428,9 @@ void initColorsForTheme(HighlightThemeList theme_list, int* color_index, int* co
     theme_list.groups[i].color_hover_n = *color_pair + 1000;
     (*color_pair)++;
   }
+#else
+  (void)theme_list;
+  (void)color_index;
+  (void)color_pair;
+#endif
 }

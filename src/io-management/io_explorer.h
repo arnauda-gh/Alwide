@@ -1,6 +1,6 @@
 #ifndef IO_EXPLORER_H
 #define IO_EXPLORER_H
-#include <linux/limits.h>
+#include <limits.h>
 #include <stdbool.h>
 
 

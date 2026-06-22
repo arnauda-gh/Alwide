@@ -41,7 +41,15 @@ static inline bool is_right_double_click(const MEVENT* m) { return m->bstate & B
 static inline bool is_right_click_action(const MEVENT* m) { return is_right_click_pressed(m) || is_right_click(m); }
 
 static inline bool is_scroll_up(const MEVENT* m) { return m->bstate & BUTTON4_PRESSED; }
-static inline bool is_scroll_down(const MEVENT* m) { return m->bstate & BUTTON5_PRESSED; }
+static inline bool is_scroll_down(const MEVENT* m) {
+  // TODO: Support scroll-down on ncurses builds without BUTTON5_*.
+  // macOS system ncurses does not expose BUTTON5_PRESSED.
+  #ifdef BUTTON5_PRESSED
+    return m->bstate & BUTTON5_PRESSED;
+  #else
+    return false;
+  #endif
+}
 static inline bool is_scroll_left(const MEVENT* m) { return m->bstate & BUTTON6_PRESSED; }
 static inline bool is_scroll_right(const MEVENT* m) { return m->bstate & BUTTON7_PRESSED; }
 static inline bool is_button8_pressed(const MEVENT* m) { return m->bstate & BUTTON8_PRESSED; }
