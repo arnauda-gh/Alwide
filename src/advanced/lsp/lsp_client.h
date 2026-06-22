@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-#include "../../../lib/cJSON/cJSON.h"
+#include <cjson/cJSON.h>
 
 #define MESSAGE_LENGTH     4092
 #define METHOD_MAX_LENGTH  200

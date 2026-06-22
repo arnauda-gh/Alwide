@@ -1,7 +1,7 @@
 #ifndef WISHWIM_LSP_DISPATCHER_H
 #define WISHWIM_LSP_DISPATCHER_H
 
-#include "../../../lib/cJSON/cJSON.h"
+#include <cjson/cJSON.h>
 
 #include "../../data-management/file_management.h"
 #include "../../io-management/viewport_history.h"

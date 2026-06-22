@@ -2,7 +2,7 @@
 #define DIR_SETTINGS_H
 #include <stdbool.h>
 
-#include "../../lib/cJSON/cJSON.h"
+#include <cjson/cJSON.h>
 #include "../core/features/navigation_history.h"
 #include "../data-management/file_management.h"
 #include "../terminal/term_handler.h"

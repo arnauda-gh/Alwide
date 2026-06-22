@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <sys/ttydefaults.h>
 
-#include "../../../../lib/tree-sitter/lib/include/tree_sitter/api.h"
+#include <tree_sitter/api.h>
 #include "../../../advanced/lsp/lsp_handler.h"
 #include "../../../advanced/tree-sitter/tree_manager.h"
 #include "../../../core/editor_context.h"

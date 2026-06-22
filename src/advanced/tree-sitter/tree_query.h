@@ -3,8 +3,8 @@
 #include <regex.h>
 #include <stdbool.h>
 
-#include "../../../lib/cJSON/cJSON.h"
-#include "../../../lib/tree-sitter/lib/include/tree_sitter/api.h"
+#include <cjson/cJSON.h>
+#include <tree_sitter/api.h>
 #include "../../environnement/constants.h"
 #include "../../utils/tools.h"
 #include "tree_manager.h"

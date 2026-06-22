@@ -1,12 +1,12 @@
 #include <assert.h>
-#include "../lib/cJSON/cJSON.h"
+#include <cjson/cJSON.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../lib/tree-sitter/lib/include/tree_sitter/api.h"
+#include <tree_sitter/api.h>
 #include "advanced/lsp/lsp_client.h"
 #include "advanced/lsp/lsp_handler.h"
 #include "advanced/tree-sitter/tree_manager.h"

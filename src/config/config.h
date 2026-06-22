@@ -2,7 +2,7 @@
 #define CONFIG_H
 #include <stdbool.h>
 
-#include "../../lib/cJSON/cJSON.h"
+#include <cjson/cJSON.h>
 
 #define CONFIG_PATH     ".config/alwide/config"
 #define CONFIG_FOLDER   ".config/alwide/"

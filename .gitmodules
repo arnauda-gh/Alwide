@@ -75,7 +75,7 @@
 	url = https://github.com/jpt13653903/tree-sitter-vhdl.git
 	ignore = untracked
 [submodule "lib/cJSON"]
-	path = lib/cJSON
+	path = lib/cjson
 	url = https://github.com/DaveGamble/cJSON.git
 	ignore = untracked
 [submodule "lib/tree-sitter-latex"]
