@@ -578,9 +578,9 @@ void deleteSelection(Cursor* cursor, Cursor* select_cursor) {
 
 void deleteSelectionWithState(History** history_p, Cursor* cursor, Cursor* select_cursor,
                               PayloadStateChange* payload_state_change) {
-  saveAction(history_p, createDeleteAction(*cursor, cursor_to_desc(*select_cursor)), globalOnStateChange, cursor,
-             (void*)payload_state_change);
+  Action action = createDeleteAction(*cursor, cursor_to_desc(*select_cursor));
   deleteSelection(cursor, select_cursor);
+  saveAction(history_p, action, globalOnStateChange, cursor, (void*)payload_state_change);
 }
 
 
