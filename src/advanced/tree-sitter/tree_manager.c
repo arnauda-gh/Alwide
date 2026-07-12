@@ -131,6 +131,9 @@ void getTSLanguageFromString(const TSLanguage** lang, char* language) {
   else if (strcmp(language, "ini") == 0) {
     *lang = tree_sitter_ini();
   }
+  else if (strcmp(language, "yaml") == 0 || strcmp(language, "yml") == 0) {
+    *lang = tree_sitter_yaml();
+  }
   else {
     *lang = NULL;
   }

@@ -155,7 +155,8 @@ ifeq ($(USE_SYSTEM_GRAMMARS),1)
                   -ltree-sitter-asm \
                   -ltree-sitter-html \
                   -ltree-sitter-latex \
-                  -ltree-sitter-ini
+                  -ltree-sitter-ini \
+                  -ltree-sitter-yaml
   RUST_MODULES :=
 else
   GRAMMAR_LIBS :=
@@ -180,7 +181,8 @@ else
 	lib/tree-sitter-asm/target/release/libtree_sitter_asm.rlib \
 	lib/tree-sitter-html/target/release/libtree_sitter_html.rlib \
 	lib/tree-sitter-latex/target/release/libtree_sitter_latex.rlib \
-	lib/tree-sitter-ini/target/release/libtree_sitter_ini.rlib
+	lib/tree-sitter-ini/target/release/libtree_sitter_ini.rlib \
+	lib/tree-sitter-yaml/target/release/libtree_sitter_yaml.rlib
 endif
 
 # Map sources to objects in BUILD_DIR

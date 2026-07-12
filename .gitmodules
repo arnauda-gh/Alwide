@@ -86,3 +86,7 @@
 	path = lib/tree-sitter-ini
 	url = https://github.com/justinmk/tree-sitter-ini
 	ignore = untracked
+[submodule "lib/tree-sitter-yaml"]
+	path = lib/tree-sitter-yaml
+	url = https://github.com/tree-sitter-grammars/tree-sitter-yaml.git
+    ignore = untracked

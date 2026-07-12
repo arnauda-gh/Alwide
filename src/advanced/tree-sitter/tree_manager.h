@@ -108,6 +108,8 @@ const TSLanguage* tree_sitter_latex(void);
 
 const TSLanguage* tree_sitter_ini(void);
 
+const TSLanguage* tree_sitter_yaml(void);
+
 void initParserList(ParserList* list);
 
 void destroyParserList(ParserList* list);
