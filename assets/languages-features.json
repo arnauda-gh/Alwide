@@ -577,5 +577,32 @@
       "exe": "",
       "arguments": []
     }
+  },
+  {
+    "label": "YAML",
+    "id": "yaml",
+    "detect": {
+      "extensions": [".yaml", ".yml"],
+      "file-name": [],
+      "shebang": []
+    },
+    "comments": {
+      "line": "#",
+      "block": []
+    },
+    "tabulation": {
+      "size": 2,
+      "space": true
+    },
+    "pairs": [
+      ["{", "}"],
+      ["[", "]"],
+      ["\"", "\""],
+      ["'", "'"]
+    ],
+    "lsp": {
+      "exe": "yaml-language-server",
+      "arguments": ["--stdio"]
+    }
   }
 ]
